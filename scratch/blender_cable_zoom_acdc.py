@@ -295,7 +295,9 @@ def build_cable_zoom_scene():
     scene.render.ffmpeg.ffmpeg_preset = 'REALTIME'
     scene.render.filepath = os.path.abspath(out_file)
 
-    print(f"[BLENDER] Ready to render Cable Zoom Scene ({scene.frame_end} frames) to {out_file}!")
+    print(f"[BLENDER] Starting render of {scene.frame_end} frames to {out_file}...")
+    bpy.ops.render.render(animation=True)
+    print(f"[BLENDER] Render finished successfully! Output: {out_file}")
 
 if __name__ == "__main__":
     build_cable_zoom_scene()
