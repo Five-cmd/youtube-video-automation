@@ -1,0 +1,256 @@
+{
+  "policy": {
+    "topics_in_advance_days": 4,
+    "production_in_advance_days": 2,
+    "slots_per_day": 6,
+    "total_preplanned_topics": 24,
+    "daily_composition": {
+      "3d_animation_voiceover": 3,
+      "3d_animation_music_only": 1,
+      "real_life_experiment_3to5s_cuts": 2
+    },
+    "pinned_comment_template": "❤️👍 Official Creator Spotlight & Physics Quiz:\n📌 {comment_q}\n\n👉 Watch Related Video ({rel_title}):\n🔗 {rel_url}\n\n🔔 Enjoyed this video? Please drop a LIKE 👍 and SUBSCRIBE to @Physics_explain_YT for daily 3D simulations & mind-blowing physics experiments! 💬⚡"
+  },
+  "schedule": [
+    {
+      "day": 1,
+      "date": "2026-11-07",
+      "slot_time": "16:00",
+      "style": "animation_voice",
+      "id": "ac_dc_electron_drift_3d",
+      "title": "AC vs DC: What REALLY Happens Inside the Wire in 3D! ⚡ #shorts #physics #science",
+      "hook": "WAIT... ELECTRONS IN AC NEVER ACTUALLY MOVE FORWARD?!",
+      "comment_q": "💬 Did you know electrons in AC only vibrate in place? Drop your thoughts below!"
+    },
+    {
+      "day": 1,
+      "date": "2026-11-07",
+      "slot_time": "18:00",
+      "style": "real_experiment",
+      "id": "lenz_law_copper_tube",
+      "title": "Neodymium Magnet SLOWS DOWN Through Copper Pipe! 🧲 #shorts #physics #science",
+      "hook": "WAIT... COPPER STOPS FALLING MAGNETS IN MID-AIR?!",
+      "comment_q": "💬 How does Lenz's law create opposing magnetic eddy currents? Comment below!"
+    },
+    {
+      "day": 1,
+      "date": "2026-11-07",
+      "slot_time": "20:00",
+      "style": "animation_voice",
+      "id": "transformer_magnetic_core_3d",
+      "title": "How Transformers Transfer 100,000 Volts With ZERO Physical Contact! ⚡ #shorts #physics #science",
+      "hook": "WAIT... TRANSFORMERS POWER CITIES WITH ZERO CONTACT?!",
+      "comment_q": "💬 How many volts does your household transformer step down? Comment below!"
+    },
+    {
+      "day": 1,
+      "date": "2026-11-07",
+      "slot_time": "21:30",
+      "style": "animation_music",
+      "id": "lcr_circuit_voltage_current",
+      "title": "Voltage and Current in LCR Circuit Explained in 3D ⚡ #shorts #physics #science",
+      "hook": "WAIT... VOLTAGE AND CURRENT DON'T MOVE TOGETHER?!",
+      "comment_q": "💬 In which component does Current lead Voltage? Comment below!"
+    },
+    {
+      "day": 1,
+      "date": "2026-11-07",
+      "slot_time": "23:00",
+      "style": "animation_voice",
+      "id": "full_wave_bridge_rectifier_3d",
+      "title": "How 4 Diodes Tame Wild AC Power Into Smooth DC! ⚡ #shorts #physics #science",
+      "hook": "WAIT... HOW 4 DIODES FORCE ELECTRICITY TO NEVER REVERSE?!",
+      "comment_q": "💬 What would happen if one diode in the bridge burned out? Comment below!"
+    },
+    {
+      "day": 1,
+      "date": "2026-11-07",
+      "slot_time": "00:30",
+      "style": "real_experiment",
+      "id": "quantum_levitation_superconductor",
+      "title": "Liquid Nitrogen LOCKED Superconductor in Mid-Air! ❄️🧲 #shorts #physics #science",
+      "hook": "WAIT... FROZEN DISC FLOATING UPSIDE DOWN ON MAGNETS?!",
+      "comment_q": "💬 What temperature does YBCO become a superconductor? Drop your guess below!"
+    },
+    {
+      "day": 2,
+      "date": "2026-11-08",
+      "slot_time": "16:00",
+      "style": "animation_voice",
+      "id": "rutherford_gold_foil_3d",
+      "title": "How Alpha Particles Proved Atoms Are 99.99% EMPTY SPACE! ⚛️ #shorts #physics #science",
+      "hook": "WAIT... ATOMS ARE 99.9999999% EMPTY SPACE?!",
+      "comment_q": "💬 If atoms are empty space, why can't we walk through walls? Comment below!"
+    },
+    {
+      "day": 2,
+      "date": "2026-11-08",
+      "slot_time": "18:00",
+      "style": "real_experiment",
+      "id": "oobleck_non_newtonian_fluid",
+      "title": "Audio Subwoofer Turns Liquid Cornstarch Into DANCING MONSTERS! 🔊 #shorts #physics #science",
+      "hook": "WAIT... BASS WAVES MAKE LIQUID GROW SOLID FINGERS?!",
+      "comment_q": "💬 What is your favorite non-Newtonian shear-thickening fluid? Comment below!"
+    },
+    {
+      "day": 2,
+      "date": "2026-11-08",
+      "slot_time": "20:00",
+      "style": "animation_voice",
+      "id": "lorentz_force_charge_deflection_3d",
+      "title": "Lorentz Force: Why Magnets Bend Flying Electrons Into Circles! 🧲 #shorts #physics #science",
+      "hook": "WAIT... MAGNETS BEND FLYING ELECTRONS INTO CIRCLES?!",
+      "comment_q": "💬 Why does the magnetic force do zero work on a charged particle? Comment below!"
+    },
+    {
+      "day": 2,
+      "date": "2026-11-08",
+      "slot_time": "21:30",
+      "style": "animation_music",
+      "id": "current_vs_voltage_pipe_3d",
+      "title": "Voltage vs Current: The Ultimate 3D Physical Analogy! 💧⚡ #shorts #physics #science",
+      "hook": "WAIT... VOLTAGE PUSHES, RESISTANCE BLOCKS?!",
+      "comment_q": "💬 What is your favorite way to visualize Ohm's Law? Comment below!"
+    },
+    {
+      "day": 2,
+      "date": "2026-11-08",
+      "slot_time": "23:00",
+      "style": "animation_voice",
+      "id": "three_phase_ac_rotating_field_3d",
+      "title": "Three-Phase AC: How Motors Spin With ZERO Moving Parts! ⚡ #shorts #physics #science",
+      "hook": "WAIT... 3 WIRES CREATE A ROTATING MAGNETIC TORNADO?!",
+      "comment_q": "💬 Why does industry use 3-phase instead of single-phase power? Comment below!"
+    },
+    {
+      "day": 2,
+      "date": "2026-11-08",
+      "slot_time": "00:30",
+      "style": "real_experiment",
+      "id": "singing_tesla_coil_sound",
+      "title": "50,000 Volt Tesla Coil Playing Music With Real LIGHTNING! ⚡🎶 #shorts #physics #science",
+      "hook": "WAIT... HIGH-VOLTAGE SPARKS PLAYING MUSICAL NOTES?!",
+      "comment_q": "💬 How does expanding plasma create acoustic pressure waves? Comment below!"
+    },
+    {
+      "day": 3,
+      "date": "2026-11-09",
+      "slot_time": "16:00",
+      "style": "animation_voice",
+      "id": "capacitor_dielectric_field_3d",
+      "title": "How Capacitors Store Energy Inside Stretched Atoms in 3D! ⚡ #shorts #physics #science",
+      "hook": "WAIT... INSULATOR ATOMS STRETCH TO STORE CHARGE?!",
+      "comment_q": "💬 What dielectric material stores the most energy? Comment below!"
+    },
+    {
+      "day": 3,
+      "date": "2026-11-09",
+      "slot_time": "18:00",
+      "style": "real_experiment",
+      "id": "bernoulli_levitating_ball",
+      "title": "Bernoulli Principle: Floating Heavy Balls on Air Streams! 🌪️ #shorts #physics #science",
+      "hook": "WAIT... HIGH SPEED AIR TRAPS BALLS IN MID-AIR?!",
+      "comment_q": "💬 How does lower pressure keep the ball trapped in the jet center? Comment below!"
+    },
+    {
+      "day": 3,
+      "date": "2026-11-09",
+      "slot_time": "20:00",
+      "style": "animation_voice",
+      "id": "pn_junction_diode_depletion_3d",
+      "title": "How Diodes Work: The Microscopic P-N Barrier in 3D! ⚡ #shorts #physics #science",
+      "hook": "WAIT... JOINING 2 SILICON CHIPS CREATES A ONE-WAY DOOR?!",
+      "comment_q": "💬 What voltage does silicon need to overcome the depletion zone? Comment below!"
+    },
+    {
+      "day": 3,
+      "date": "2026-11-09",
+      "slot_time": "21:30",
+      "style": "animation_music",
+      "id": "light_polarization_crossed_filters_3d",
+      "title": "Light Polarization: Crossing 2 Clear Filters BLOCKS 100% of Light! 🕶️ #shorts #physics #science",
+      "hook": "WAIT... 2 CLEAR SHEETS TURN PITCH BLACK WHEN CROSSED?!",
+      "comment_q": "💬 What happens if you insert a 3rd filter at 45 degrees in between? Comment below!"
+    },
+    {
+      "day": 3,
+      "date": "2026-11-09",
+      "slot_time": "23:00",
+      "style": "animation_voice",
+      "id": "electromagnetic_wave_leapfrog_3d",
+      "title": "How Light Waves Leapfrog Through Total Vacuum at 300,000 km/s! 🌊 #shorts #physics #science",
+      "hook": "WAIT... LIGHT TRAVELS THROUGH VACUUM BY CREATING ITS OWN PATH?!",
+      "comment_q": "💬 Why do Maxwell's equations predict waves travel at speed c? Comment below!"
+    },
+    {
+      "day": 3,
+      "date": "2026-11-09",
+      "slot_time": "00:30",
+      "style": "real_experiment",
+      "id": "cavitation_mantis_shrimp_strike",
+      "title": "Mantis Shrimp Punch BOILS Water Hotter Than The Sun! 🦐⚡ #shorts #physics #science",
+      "hook": "WAIT... PUNCHING FASTER THAN A BULLET CREATES LIGHT?!",
+      "comment_q": "💬 Have you ever seen cavitation bubbles damage boat propellers? Comment below!"
+    },
+    {
+      "day": 4,
+      "date": "2026-11-10",
+      "slot_time": "16:00",
+      "style": "animation_voice",
+      "id": "electric_generator_faraday_3d",
+      "title": "Faraday's Law: How Spinning Copper Wire Creates Electricity in 3D! ⚡ #shorts #physics #science",
+      "hook": "WAIT... SPINNING A WIRE LOOP IN MAGNETS POWERS CITIES?!",
+      "comment_q": "💬 How does magnetic flux linkage produce sinusoidal AC? Comment below!"
+    },
+    {
+      "day": 4,
+      "date": "2026-11-10",
+      "slot_time": "18:00",
+      "style": "real_experiment",
+      "id": "schlieren_imaging_heat_sound",
+      "title": "Schlieren Optics: Making INVISIBLE Sound & Shockwaves Visible! 👁️ #shorts #physics #science",
+      "hook": "WAIT... THIS MIRROR MAKES SOUND WAVES VISIBLE TO HUMAN EYES?!",
+      "comment_q": "💬 What other invisible fluid dynamics would you love to see under Schlieren? Comment below!"
+    },
+    {
+      "day": 4,
+      "date": "2026-11-10",
+      "slot_time": "20:00",
+      "style": "animation_voice",
+      "id": "half_vs_full_wave_rectifier_3d",
+      "title": "Half-Wave vs Full-Wave Rectification Compared in 3D! ⚡ #shorts #physics #science",
+      "hook": "WAIT... THROWING HALF OF ELECTRICITY AWAY VS SAVING ALL?!",
+      "comment_q": "💬 Which rectifier produces smoother ripple voltage? Comment below!"
+    },
+    {
+      "day": 4,
+      "date": "2026-11-10",
+      "slot_time": "21:30",
+      "style": "animation_music",
+      "id": "capacitor_charging_discharge_curve_3d",
+      "title": "Capacitor RC Exponential Charge & Surge Discharge in 3D ⚡ #shorts #physics #science",
+      "hook": "WAIT... CAPACITOR CLIMBS EXPONENTIALLY THEN SURGES LIKE LIGHTNING?!",
+      "comment_q": "💬 How many tau time constants does it take to reach 99% charge? Comment below!"
+    },
+    {
+      "day": 4,
+      "date": "2026-11-10",
+      "slot_time": "23:00",
+      "style": "animation_voice",
+      "id": "inductive_choke_high_freq_filter_3d",
+      "title": "How Inductive Coils Block High-Frequency Noise in 3D! ⚡ #shorts #physics #science",
+      "hook": "WAIT... A COPPER COIL LETS DC PASS BUT BLOCKS HIGH FREQUENCIES?!",
+      "comment_q": "💬 Why does inductive reactance increase with frequency? Comment below!"
+    },
+    {
+      "day": 4,
+      "date": "2026-11-10",
+      "slot_time": "00:30",
+      "style": "real_experiment",
+      "id": "prince_ruperts_drop",
+      "title": "Prince Rupert's Drop Withstands BULLETS But Explodes From Tail! 💥 #shorts #physics #science",
+      "hook": "WAIT... INDESTRUCTIBLE GLASS BULB EXPLODES AT 1,500 M/S?!",
+      "comment_q": "💬 Why does compressive surface stress make the bulb head almost unbreakable? Comment below!"
+    }
+  ]
+}
