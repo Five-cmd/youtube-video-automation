@@ -20,9 +20,13 @@ def run_blender_render():
         if os.path.exists(local_blender):
             blender_bin = local_blender
 
-    # Run blender script
+    # Run blender script with xvfb-run on Linux for headless OpenGL/EGL
     script_path = "scratch/blender_cable_zoom_acdc.py"
-    cmd = [blender_bin, "-b", "-P", script_path]
+    if sys.platform != "win32":
+        cmd = ["xvfb-run", "-a", "blender", "-b", "-P", script_path]
+    else:
+        cmd = [blender_bin, "-b", "-P", script_path]
+    print(f"[RUNNING] {' '.join(cmd)}", flush=True)
     subprocess.run(cmd, check=True)
     
     # Locate output
