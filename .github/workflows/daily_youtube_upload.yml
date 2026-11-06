@@ -1,0 +1,56 @@
+name: 6x-Daily Realtime-Analytics Aligned YouTube Auto-Edit & Upload (Blender 3D Cloud Runner)
+
+on:
+  schedule:
+    # Runs every 3 hours to inspect and maintain the 2-day rolling queue of 6 daily slots aligned with Realtime Analytics:
+    # 1. 16:00 BKK (04:00 AM EST) - 3D Animation Voice
+    # 2. 18:00 BKK (06:00 AM EST) - Real Experiment (3-5s cuts)
+    # 3. 20:00 BKK (08:00 AM EST) - 3D Animation Voice
+    # 4. 21:30 BKK (09:30 AM EST) - 3D Animation Music-Only (Peak slot!)
+    # 5. 23:00 BKK (11:00 AM EST) - 3D Animation Voice
+    # 6. 00:30 BKK (12:30 PM EST) - Real Experiment (3-5s cuts)
+    - cron: '0 */3 * * *'
+  workflow_dispatch: # Allows manual 1-click test runs from GitHub Actions
+
+permissions:
+  contents: write
+
+jobs:
+  edit-and-upload:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install FFmpeg & Headless Blender 4.2 LTS
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg libxkbcommon0 libsm6 libxext6 libxrender-dev
+          echo "[CLOUD] Downloading Blender 4.2 LTS Linux Portable..."
+          curl -sL https://download.blender.org/release/Blender4.2/blender-4.2.3-linux-x64.tar.xz | tar -xJ
+          sudo ln -s $(pwd)/blender-4.2.3-linux-x64/blender /usr/local/bin/blender
+          blender -b --version
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run Blender 3D Simulation, Zack D Style Captions & YouTube Upload
+        env:
+          YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
+          YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
+          YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
+          TZ: Asia/Bangkok
+        run: python process_and_upload.py --cloud
+
+      - name: Save uploaded video history back to repository
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add uploaded_history.json topics_roadmap_4days.json
+          git diff --staged --quiet || (git commit -m "chore: record uploaded video in history" && git push)
