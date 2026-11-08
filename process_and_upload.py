@@ -2387,92 +2387,55 @@ def format_srt_timestamp(seconds: float) -> str:
 
 
 def generate_science_bgm_wav(wav_path: Path, duration: float) -> Path:
-    """Synthesize:
-    1. Signature iconic opening sound of @Physics_explain_YT at t=0 (sci-fi sub-drop + sparkling crystal chime).
-    2. Continuous, energetic scientific ambient melody and driving rhythm that plays throughout the ENTIRE clip without fading out early.
-    """
+    """Synthesize clean, professional cinematic ambient music without any high-pitched chirps, squeaks, or sweeps."""
     sr = 44100
     safe_duration = max(float(duration), 16.0) + 2.0
     total_samples = int(sr * safe_duration)
     t = np.linspace(0.0, safe_duration, total_samples, endpoint=False)
 
-    # 1. Signature Iconic Opening Sound of @Physics_explain_YT (0.0s to 0.88s)
-    riser_mask = (t <= 0.15)
-    t_rise = t[riser_mask] / 0.15
-    riser = np.sin(2 * np.pi * (160 + 340 * (t_rise**2)) * t[riser_mask]) * (t_rise**2) * 0.35
-
-    impact_mask = (t >= 0.15) & (t <= 0.88)
-    t_imp = t[impact_mask] - 0.15
-    f_drop = 320.0 * np.exp(-6.5 * t_imp) + 55.0
-    phase_drop = 2 * np.pi * np.cumsum(f_drop) / sr
-    sub_drop = np.sin(phase_drop) * np.exp(-3.5 * t_imp) * 0.65
-    chime = (
-        0.35 * np.sin(2 * np.pi * 1046.5 * t_imp)
-        + 0.22 * np.sin(2 * np.pi * 2093.0 * t_imp)
-        + 0.12 * np.sin(2 * np.pi * 3135.9 * t_imp)
-    ) * np.exp(-5.5 * t_imp)
-
-    # 2. Rich, Continuous Scientific Melodic Harmony (Am -> F -> C -> G) Throughout Entire Clip
-    chord_sec = 3.6
+    # Rich, smooth cinematic chords (Am -> F -> C -> G) with warm lowpass harmonics
+    chord_sec = 4.0
     chord_idx = (t // chord_sec).astype(int) % 4
     root_freqs = [110.0, 87.31, 130.81, 98.00]      # A2, F2, C3, G2
     fifth_freqs = [164.81, 130.81, 196.00, 146.83]  # E3, C3, G3, D3
     tenth_freqs = [261.63, 220.00, 329.63, 246.94]  # C4, A3, E4, B3
-    fourteenth_freqs = [392.00, 349.23, 523.25, 392.00] # G4, F4, C5, G4
 
     f_root = np.choose(chord_idx, root_freqs)
     f_fifth = np.choose(chord_idx, fifth_freqs)
     f_tenth = np.choose(chord_idx, tenth_freqs)
-    f_fourteenth = np.choose(chord_idx, fourteenth_freqs)
 
-    # Stereo Chorus & Warm Harmonic Waves
-    lfo = 1.0 + 0.003 * np.sin(2 * np.pi * 3.2 * t)
+    # Smooth, warm cinematic pad (no high-frequency sweeps, no chirps, zero animal-like sounds)
     pad_l = (
-        0.38 * np.sin(2 * np.pi * f_root * t)
-        + 0.28 * np.sin(2 * np.pi * f_fifth * t * lfo + 0.3)
-        + 0.20 * np.sin(2 * np.pi * f_tenth * t + 0.7)
-        + 0.15 * np.sin(2 * np.pi * f_fourteenth * t * (2 - lfo) + 1.2)
+        0.45 * np.sin(2 * np.pi * f_root * t)
+        + 0.30 * np.sin(2 * np.pi * f_fifth * t + 0.4)
+        + 0.15 * np.sin(2 * np.pi * f_tenth * t + 0.8)
     )
     pad_r = (
-        0.38 * np.sin(2 * np.pi * f_root * t)
-        + 0.28 * np.sin(2 * np.pi * (f_fifth * 1.002) * t + 1.1)
-        + 0.20 * np.sin(2 * np.pi * (f_tenth * 0.998) * t + 1.8)
-        + 0.15 * np.sin(2 * np.pi * (f_fourteenth * 1.001) * t + 2.1)
+        0.45 * np.sin(2 * np.pi * f_root * t)
+        + 0.30 * np.sin(2 * np.pi * (f_fifth * 1.002) * t + 1.2)
+        + 0.15 * np.sin(2 * np.pi * (f_tenth * 0.998) * t + 1.9)
     )
 
-    # 3. Driving Scientific Curiosity Arpeggio (Continuous 16th-note pulse)
-    arp_freq = 4.0  # 4 notes per second
-    arp_phase = (t * arp_freq) % 1.0
-    pulse_env = np.exp(-5.5 * arp_phase)
-    arp_notes = [440.0, 523.25, 659.25, 783.99]  # A4, C5, E5, G5
-    note_idx = (t * arp_freq).astype(int) % 4
-    f_arp = np.choose(note_idx, arp_notes)
-    pulse = 0.16 * np.sin(2 * np.pi * f_arp * t) * pulse_env
-    pad_l += pulse
-    pad_r += pulse
+    # Warm deep sub-bass bed (55Hz)
+    sub_bass = 0.22 * np.sin(2 * np.pi * (f_root / 2.0) * t)
+    pad_l += sub_bass
+    pad_r += sub_bass
 
-    # 4. Rhythmic Sub-Bass Pulse
-    bass_pulse = 0.22 * np.sin(2 * np.pi * (f_root / 2.0) * t) * (0.75 + 0.25 * np.sin(2 * np.pi * 2.0 * t))
-    pad_l += bass_pulse
-    pad_r += bass_pulse
+    # Gentle envelope and normalization to steady subtle background level (~0.22)
+    peak = max(float(np.max(np.abs(pad_l))), float(np.max(np.abs(pad_r))), 1e-6)
+    pad_l = (pad_l / peak) * 0.24
+    pad_r = (pad_r / peak) * 0.24
 
-    # Normalize the continuous music track to steady healthy amplitude (~0.35)
-    music_peak = max(float(np.max(np.abs(pad_l))), float(np.max(np.abs(pad_r))), 1e-6)
-    pad_l = (pad_l / music_peak) * 0.38
-    pad_r = (pad_r / music_peak) * 0.38
+    # Smooth 1.0s fade-in and 1.5s fade-out
+    fade_in_samples = int(1.0 * sr)
+    fade_in = np.linspace(0.0, 1.0, fade_in_samples)
+    pad_l[:fade_in_samples] *= fade_in
+    pad_r[:fade_in_samples] *= fade_in
 
-    # Layer the Signature Iconic Opening Sound (0.0s to 0.88s) cleanly on top
-    pad_l[riser_mask] += riser
-    pad_r[riser_mask] += riser
-    pad_l[impact_mask] += (sub_drop + chime)
-    pad_r[impact_mask] += (sub_drop + chime)
-
-    # Gentle 0.4s fade-out at the absolute end of the file
-    fade_samples = int(0.4 * sr)
-    if fade_samples > 0:
-        fade_out = np.linspace(1.0, 0.0, fade_samples)
-        pad_l[-fade_samples:] *= fade_out
-        pad_r[-fade_samples:] *= fade_out
+    fade_out_samples = int(1.5 * sr)
+    fade_out = np.linspace(1.0, 0.0, fade_out_samples)
+    pad_l[-fade_out_samples:] *= fade_out
+    pad_r[-fade_out_samples:] *= fade_out
 
     stereo = np.empty((total_samples, 2), dtype=np.int16)
     stereo[:, 0] = np.clip(pad_l * 32767.0, -32768, 32767).astype(np.int16)
@@ -2699,7 +2662,7 @@ def build_brand_new_short(
             "[base][1:v]overlay=0:0[with_main];"
             f"[with_main][2:v]overlay=0:0:enable='gte(t,{endcard_start:.2f})'[vout];"
             "[3:a]aformat=sample_rates=44100:channel_layouts=stereo,highpass=f=85,lowpass=f=12000,volume=1.0[vo];"
-            "[4:a]aformat=sample_rates=44100:channel_layouts=stereo,volume=0.34[bgm];"
+            "[4:a]aformat=sample_rates=44100:channel_layouts=stereo,volume=0.18[bgm];"
             "[vo][bgm]amix=inputs=2:duration=longest:normalize=0,"
             "loudnorm=I=-19:TP=-2.5:LRA=7,volume=0.92[aout]"
         )
@@ -2712,7 +2675,7 @@ def build_brand_new_short(
             "[base][1:v]overlay=0:0[with_main];"
             f"[with_main][2:v]overlay=0:0:enable='gte(t,{endcard_start:.2f})'[vout];"
             "[3:a]aformat=sample_rates=44100:channel_layouts=stereo,highpass=f=85,lowpass=f=12000,volume=1.0[vo];"
-            "[4:a]aformat=sample_rates=44100:channel_layouts=stereo,volume=0.34[bgm];"
+            "[4:a]aformat=sample_rates=44100:channel_layouts=stereo,volume=0.18[bgm];"
             "[vo][bgm]amix=inputs=2:duration=longest:normalize=0,"
             "loudnorm=I=-19:TP=-2.5:LRA=7,volume=0.92[aout]"
         )
