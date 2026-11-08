@@ -1,7 +1,7 @@
 {
   "policy": {
     "topics_in_advance_days": 4,
-    "production_in_advance_days": 2,
+    "production_in_advance_days": 1,
     "slots_per_day": 6,
     "total_preplanned_topics": 24,
     "daily_composition": {
@@ -14,87 +14,81 @@
   "schedule": [
     {
       "day": 1,
-      "date": "2026-11-07",
+      "date": "2026-11-09",
       "slot_time": "16:00",
       "style": "animation_voice",
-      "id": "ac_dc_electron_drift_3d",
-      "title": "AC vs DC: What REALLY Happens Inside the Wire in 3D! ⚡ #shorts #physics #science",
-      "hook": "WAIT... ELECTRONS IN AC NEVER ACTUALLY MOVE FORWARD?!",
-      "comment_q": "💬 Did you know electrons in AC only vibrate in place? Drop your thoughts below!"
-    },
-    {
-      "day": 1,
-      "date": "2026-11-07",
-      "slot_time": "18:00",
-      "style": "real_experiment",
       "id": "lenz_law_copper_tube",
-      "title": "Neodymium Magnet SLOWS DOWN Through Copper Pipe! 🧲 #shorts #physics #science",
-      "hook": "WAIT... COPPER STOPS FALLING MAGNETS IN MID-AIR?!",
-      "comment_q": "💬 How does Lenz's law create opposing magnetic eddy currents? Comment below!"
+      "script_file": "scratch/blender_lenz_law_copper.py",
+      "title": "Why Did This Magnet FREEZE Inside Copper?! ⚡ #shorts #physics",
+      "hook": "WAIT... WHY DID THIS MAGNET FREEZE IN MID-AIR?!",
+      "narration": "Drop a heavy neodymium magnet through a copper pipe... and gravity suddenly loses! Copper isn't even magnetic. So why does the magnet slow down to a crawl? As the magnet falls, its moving magnetic field forces electrons inside the copper into spinning whirlpools called eddy currents. These whirlpools create their own opposing magnetic cushion. The cushion pushes upward against the falling magnet, locking it in a slow-motion levitation brake!",
+      "comment_q": "💬 What happens if you drop it through an aluminum pipe instead? Drop your guess below!"
     },
     {
       "day": 1,
-      "date": "2026-11-07",
+      "date": "2026-11-09",
+      "slot_time": "17:00",
+      "style": "animation_voice",
+      "id": "acoustic_levitation_3d",
+      "script_file": "scratch/blender_acoustic_levitation.py",
+      "title": "Can SOUND Defy Gravity and Levitate Water?! 🔊💧 (3D Science) #shorts #physics",
+      "hook": "WAIT... SOUND WAVES CAN PICK UP OBJECTS?!",
+      "narration": "If you blast sound at a droplet of water... it doesn't splash. It freezes in mid-air! Between two ultrasonic speakers, high-frequency sound waves rush at each other and collide. Their peaks cancel out, carving invisible pockets of zero pressure called acoustic nodes. These pockets act like invisible sonic hands, clamping the droplet from both sides and locking it motionless against gravity!",
+      "comment_q": "💬 Scientists now use this to levitate human cells in space. What would you try levitating?"
+    },
+    {
+      "day": 1,
+      "date": "2026-11-09",
+      "slot_time": "18:00",
+      "style": "animation_voice",
+      "id": "crookes_radiometer_3d",
+      "script_file": "scratch/blender_crookes_radiometer.py",
+      "title": "Why Does Light SPIN This Glass Engine in a Vacuum?! 💡 #shorts #physics",
+      "hook": "WAIT... LIGHT CAN PHYSICALLY PUSH AND SPIN AN ENGINE?!",
+      "narration": "Inside this sealed glass vacuum bulb sits a rotor with four vanes. Shine a flashlight on it... and it starts spinning at crazy speeds! Each vane is silver on one side and black on the other. The black side absorbs light and heats up, while the silver side stays cool. Residual gas molecules bounce off the hotter black side with much more kinetic force, kick-starting an invisible heat engine that spins the rotor!",
+      "comment_q": "💬 Would it spin faster or completely stop in an absolute perfect vacuum? Comment your guess!"
+    },
+    {
+      "day": 1,
+      "date": "2026-11-09",
+      "slot_time": "19:00",
+      "style": "animation_voice",
+      "id": "voltage_current_cutaway_3d",
+      "script_file": "scratch/blender_voltage_current_pipe.py",
+      "title": "Voltage vs Current: What ACTUALLY Happens Inside The Wire! ⚡ #shorts #physics",
+      "hook": "WAIT... ELECTRICITY ISN'T WHAT YOU THINK?!",
+      "narration": "You use electricity every day, but do you know what's actually inside the wire? Think of electrons like water rushing through a pipe. CURRENT is simply how many electrons pass through every second. VOLTAGE isn't the electricity itself—it's the massive push shoving them forward! And RESISTANCE is the clamp trying to choke the pipe. Voltage pushes, resistance chokes, and current is what survives to power your world!",
+      "comment_q": "💬 What is your favorite way to picture Ohm's Law? Tell us below!",
+      "query": "voltage vs current resistance wire physics experiment"
+    },
+    {
+      "day": 1,
+      "date": "2026-11-09",
       "slot_time": "20:00",
       "style": "animation_voice",
-      "id": "transformer_magnetic_core_3d",
-      "title": "How Transformers Transfer 100,000 Volts With ZERO Physical Contact! ⚡ #shorts #physics #science",
-      "hook": "WAIT... TRANSFORMERS POWER CITIES WITH ZERO CONTACT?!",
-      "comment_q": "💬 How many volts does your household transformer step down? Comment below!"
+      "id": "triboluminescence_sparks_3d",
+      "script_file": "scratch/blender_triboluminescence.py",
+      "title": "Why Crushing Sugar In The Dark Sparks BLUE LIGHT! 🍬✨ #shorts #physics",
+      "hook": "WAIT... CRUSHING CANDY MAKES ELECTRIC LIGHT?!",
+      "narration": "If you crush plain sugar in total darkness... it flashes with bright blue sparks! There are no batteries inside, so where is this glowing light coming from? When mechanical force snaps the crystal lattice, chemical bonds rip apart unevenly. This creates millions of volts of static charge across the microscopic crack. Electrons jump the gap, smashing into nitrogen molecules in the air and lighting up the room! This is Triboluminescence!",
+      "comment_q": "💬 Have you ever seen Wint-O-Green Life Savers spark in the dark? Comment below!",
+      "query": "crushing lifesavers sparks blue light triboluminescence"
     },
     {
       "day": 1,
-      "date": "2026-11-07",
-      "slot_time": "21:30",
-      "style": "animation_music",
-      "id": "lcr_circuit_voltage_current",
-      "title": "Voltage and Current in LCR Circuit Explained in 3D ⚡ #shorts #physics #science",
-      "hook": "WAIT... VOLTAGE AND CURRENT DON'T MOVE TOGETHER?!",
-      "comment_q": "💬 In which component does Current lead Voltage? Comment below!"
-    },
-    {
-      "day": 1,
-      "date": "2026-11-07",
-      "slot_time": "23:00",
+      "date": "2026-11-09",
+      "slot_time": "21:00",
       "style": "animation_voice",
-      "id": "full_wave_bridge_rectifier_3d",
-      "title": "How 4 Diodes Tame Wild AC Power Into Smooth DC! ⚡ #shorts #physics #science",
-      "hook": "WAIT... HOW 4 DIODES FORCE ELECTRICITY TO NEVER REVERSE?!",
-      "comment_q": "💬 What would happen if one diode in the bridge burned out? Comment below!"
-    },
-    {
-      "day": 1,
-      "date": "2026-11-07",
-      "slot_time": "00:30",
-      "style": "real_experiment",
-      "id": "quantum_levitation_superconductor",
-      "title": "Liquid Nitrogen LOCKED Superconductor in Mid-Air! ❄️🧲 #shorts #physics #science",
-      "hook": "WAIT... FROZEN DISC FLOATING UPSIDE DOWN ON MAGNETS?!",
-      "comment_q": "💬 What temperature does YBCO become a superconductor? Drop your guess below!"
+      "id": "electromagnetic_pinch_3d",
+      "script_file": "scratch/blender_electromagnetic_pinch.py",
+      "title": "50,000 Amperes vs. Soda Can in 3D! ⚡🥤 #shorts #physics",
+      "hook": "WAIT... INVISIBLE MAGNETISM CAN CRUSH METAL?!",
+      "narration": "What happens when you blast fifty thousand amps of electricity through a soda can? It doesn't melt. It violently pinches in half! When capacitors dump high voltage into a copper coil, an insane magnetic wave slams into the aluminum. This wave forces opposing currents to fight each other. Opposite currents violently repel, creating tons of inward magnetic pressure. In less than a millisecond, the invisible force crushes the metal like paper!",
+      "comment_q": "💬 Would a steel can crush faster or survive the magnetic pinch? Comment your guess!"
     },
     {
       "day": 2,
-      "date": "2026-11-08",
-      "slot_time": "16:00",
-      "style": "animation_voice",
-      "id": "rutherford_gold_foil_3d",
-      "title": "How Alpha Particles Proved Atoms Are 99.99% EMPTY SPACE! ⚛️ #shorts #physics #science",
-      "hook": "WAIT... ATOMS ARE 99.9999999% EMPTY SPACE?!",
-      "comment_q": "💬 If atoms are empty space, why can't we walk through walls? Comment below!"
-    },
-    {
-      "day": 2,
-      "date": "2026-11-08",
-      "slot_time": "18:00",
-      "style": "real_experiment",
-      "id": "oobleck_non_newtonian_fluid",
-      "title": "Audio Subwoofer Turns Liquid Cornstarch Into DANCING MONSTERS! 🔊 #shorts #physics #science",
-      "hook": "WAIT... BASS WAVES MAKE LIQUID GROW SOLID FINGERS?!",
-      "comment_q": "💬 What is your favorite non-Newtonian shear-thickening fluid? Comment below!"
-    },
-    {
-      "day": 2,
-      "date": "2026-11-08",
+      "date": "2026-11-09",
       "slot_time": "20:00",
       "style": "animation_voice",
       "id": "lorentz_force_charge_deflection_3d",
@@ -104,7 +98,47 @@
     },
     {
       "day": 2,
-      "date": "2026-11-08",
+      "date": "2026-11-09",
+      "slot_time": "21:00",
+      "style": "real_experiment",
+      "id": "singing_tesla_coil_sound",
+      "title": "50,000 Volt Tesla Coil Playing Music With Real LIGHTNING! ⚡🎶 #shorts #physics #science",
+      "hook": "WAIT... HIGH-VOLTAGE SPARKS PLAYING MUSICAL NOTES?!",
+      "comment_q": "💬 How does expanding plasma create acoustic pressure waves? Comment below!"
+    },
+    {
+      "day": 2,
+      "date": "2026-11-09",
+      "slot_time": "16:00",
+      "style": "animation_voice",
+      "id": "rutherford_gold_foil_3d",
+      "title": "How Alpha Particles Proved Atoms Are 99.99% EMPTY SPACE! ⚛️ #shorts #physics #science",
+      "hook": "WAIT... ATOMS ARE 99.9999999% EMPTY SPACE?!",
+      "comment_q": "💬 If atoms are empty space, why can't we walk through walls? Comment below!"
+    },
+    {
+      "day": 2,
+      "date": "2026-11-09",
+      "slot_time": "18:00",
+      "style": "real_experiment",
+      "id": "oobleck_non_newtonian_fluid",
+      "title": "Audio Subwoofer Turns Liquid Cornstarch Into DANCING MONSTERS! 🔊 #shorts #physics #science",
+      "hook": "WAIT... BASS WAVES MAKE LIQUID GROW SOLID FINGERS?!",
+      "comment_q": "💬 What is your favorite non-Newtonian shear-thickening fluid? Comment below!"
+    },
+    {
+      "day": 2,
+      "date": "2026-11-09",
+      "slot_time": "20:00",
+      "style": "animation_voice",
+      "id": "lorentz_force_charge_deflection_3d",
+      "title": "Lorentz Force: Why Magnets Bend Flying Electrons Into Circles! 🧲 #shorts #physics #science",
+      "hook": "WAIT... MAGNETS BEND FLYING ELECTRONS INTO CIRCLES?!",
+      "comment_q": "💬 Why does the magnetic force do zero work on a charged particle? Comment below!"
+    },
+    {
+      "day": 2,
+      "date": "2026-11-09",
       "slot_time": "21:30",
       "style": "animation_music",
       "id": "current_vs_voltage_pipe_3d",
@@ -114,18 +148,19 @@
     },
     {
       "day": 2,
-      "date": "2026-11-08",
+      "date": "2026-11-09",
       "slot_time": "23:00",
       "style": "animation_voice",
       "id": "three_phase_ac_rotating_field_3d",
-      "title": "Three-Phase AC: How Motors Spin With ZERO Moving Parts! ⚡ #shorts #physics #science",
-      "hook": "WAIT... 3 WIRES CREATE A ROTATING MAGNETIC TORNADO?!",
-      "comment_q": "💬 Why does industry use 3-phase instead of single-phase power? Comment below!"
+      "title": "Three-Phase AC: How Motors Spin With ZERO Contact in 3D! ⚡ #shorts #physics",
+      "hook": "WAIT... MOTORS SPIN WITH ZERO TOUCHING PARTS?!",
+      "comment_q": "💬 Did you know Tesla invented the three-phase AC motor? Drop your thoughts below!",
+      "narration": "How do giant industrial motors spin at thousands of RPM with zero touching parts? Ordinary motors grind carbon brushes against spinning copper. They wear down and throw sparks. Three-phase motors use three coils firing in sequence, one hundred twenty degrees apart. Their magnetic fields combine into an invisible, rotating magnetic tornado! This spinning vortex drags the solid metal rotor along with it, creating massive torque straight from thin air!"
     },
     {
       "day": 2,
-      "date": "2026-11-08",
-      "slot_time": "00:30",
+      "date": "2026-11-09",
+      "slot_time": "21:00",
       "style": "real_experiment",
       "id": "singing_tesla_coil_sound",
       "title": "50,000 Volt Tesla Coil Playing Music With Real LIGHTNING! ⚡🎶 #shorts #physics #science",
@@ -248,9 +283,10 @@
       "slot_time": "00:30",
       "style": "real_experiment",
       "id": "prince_ruperts_drop",
-      "title": "Prince Rupert's Drop Withstands BULLETS But Explodes From Tail! 💥 #shorts #physics #science",
-      "hook": "WAIT... INDESTRUCTIBLE GLASS BULB EXPLODES AT 1,500 M/S?!",
-      "comment_q": "💬 Why does compressive surface stress make the bulb head almost unbreakable? Comment below!"
+      "title": "Bullet vs. UNBREAKABLE Glass Drop in 3D! 💥 #shorts #physics",
+      "hook": "WAIT... A GLASS DROP SHATTERS A SPEEDING BULLET?!",
+      "comment_q": "💬 Would a diamond hydraulic press crush the head first? Comment below!",
+      "narration": "Watch what happens when a speeding bullet slams directly into this glass drop. The glass doesn't break. The bullet completely shatters! When molten glass drips into ice-cold water, the outer skin freezes instantly. Meanwhile, the hot molten core contracts inward, creating insane compressive stress of twenty-five thousand PSI! The bulbous head can survive bullets and hydraulic presses. But snip the tiny tail... and the entire drop violently detonates into dust!"
     }
   ]
 }
