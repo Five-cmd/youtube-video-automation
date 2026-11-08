@@ -2,14 +2,8 @@ name: 6x-Daily Realtime-Analytics Aligned YouTube Auto-Edit & Upload (Blender 3D
 
 on:
   schedule:
-    # Runs every 3 hours to inspect and maintain the 2-day rolling queue of 6 daily slots aligned with Realtime Analytics:
-    # 1. 16:00 BKK (04:00 AM EST) - 3D Animation Voice
-    # 2. 18:00 BKK (06:00 AM EST) - Real Experiment (3-5s cuts)
-    # 3. 20:00 BKK (08:00 AM EST) - 3D Animation Voice
-    # 4. 21:30 BKK (09:30 AM EST) - 3D Animation Music-Only (Peak slot!)
-    # 5. 23:00 BKK (11:00 AM EST) - 3D Animation Voice
-    # 6. 00:30 BKK (12:30 PM EST) - Real Experiment (3-5s cuts)
-    - cron: '0 */3 * * *'
+    # 23:00 UTC = 06:00 AM Bangkok Time every morning (Generates 6 3D clips in advance on Cloud!)
+    - cron: '0 23 * * *'
   workflow_dispatch: # Allows manual 1-click test runs from GitHub Actions
 
 permissions:
