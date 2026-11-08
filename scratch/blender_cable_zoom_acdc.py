@@ -3,7 +3,7 @@ import math
 import random
 import os
 
-def build_cable_zoom_scene():
+def build_perfect_electron_scene(do_render=True, out_file="scratch/test_electron_cutaway.mp4"):
     # 1. Clean scene
     if bpy.context.object and bpy.context.object.mode != 'OBJECT':
         bpy.ops.object.mode_set(mode='OBJECT')
@@ -11,283 +11,235 @@ def build_cable_zoom_scene():
     bpy.ops.object.delete()
 
     scene = bpy.context.scene
-
-    # 1080x1920 9:16 vertical (Shorts format)
     scene.render.resolution_x = 1080
     scene.render.resolution_y = 1920
     scene.render.fps = 24
     scene.frame_start = 1
-    scene.frame_end = 560 # 23.3 seconds at 24 fps
+    scene.frame_end = 580
 
-    # EEVEE Next Engine
     scene.render.engine = 'BLENDER_EEVEE_NEXT'
+    scene.render.use_motion_blur = False
     if hasattr(scene, 'eevee'):
         if hasattr(scene.eevee, 'taa_render_samples'):
-            scene.eevee.taa_render_samples = 12
-        if hasattr(scene.eevee, 'use_motion_blur'):
-            scene.eevee.use_motion_blur = True
+            scene.eevee.taa_render_samples = 4
 
-    # Dark background
+    # Dark studio background
     if not scene.world:
         scene.world = bpy.data.worlds.new("World")
     world = scene.world
     world.use_nodes = True
     bg_node = world.node_tree.nodes.get("Background")
     if bg_node:
-        bg_node.inputs[0].default_value = (0.005, 0.008, 0.015, 1.0)
-        bg_node.inputs[1].default_value = 0.5
+        bg_node.inputs[0].default_value = (0.01, 0.015, 0.03, 1.0)
+        bg_node.inputs[1].default_value = 0.8
 
-    # ==========================================
-    # 2. Materials
-    # ==========================================
-    # Outer Rubber Jacket (Black/Dark Slate)
+    # Materials
+    # Outer Rubber Jacket (Dark Charcoal)
     mat_outer = bpy.data.materials.new("OuterJacket")
     mat_outer.use_nodes = True
     bsdf_out = mat_outer.node_tree.nodes.get("Principled BSDF")
     if bsdf_out:
-        bsdf_out.inputs['Base Color'].default_value = (0.03, 0.03, 0.04, 1.0)
-        bsdf_out.inputs['Roughness'].default_value = 0.65
+        bsdf_out.inputs['Base Color'].default_value = (0.04, 0.04, 0.05, 1.0)
+        bsdf_out.inputs['Roughness'].default_value = 0.7
 
-    # Red/Brown Inner Wire Insulation
-    mat_wire_red = bpy.data.materials.new("WireInsulRed")
-    mat_wire_red.use_nodes = True
-    bsdf_red = mat_wire_red.node_tree.nodes.get("Principled BSDF")
-    if bsdf_red:
-        bsdf_red.inputs['Base Color'].default_value = (0.75, 0.12, 0.08, 1.0)
-        bsdf_red.inputs['Roughness'].default_value = 0.35
+    # Red Wire Insulation
+    mat_red = bpy.data.materials.new("WireRed")
+    mat_red.use_nodes = True
+    bsdf_r = mat_red.node_tree.nodes.get("Principled BSDF")
+    if bsdf_r:
+        bsdf_r.inputs['Base Color'].default_value = (0.85, 0.1, 0.08, 1.0)
+        bsdf_r.inputs['Roughness'].default_value = 0.35
 
-    # Blue Wire Insulation
-    mat_wire_blue = bpy.data.materials.new("WireInsulBlue")
-    mat_wire_blue.use_nodes = True
-    bsdf_blue = mat_wire_blue.node_tree.nodes.get("Principled BSDF")
-    if bsdf_blue:
-        bsdf_blue.inputs['Base Color'].default_value = (0.08, 0.35, 0.85, 1.0)
-        bsdf_blue.inputs['Roughness'].default_value = 0.35
-
-    # Metallic Copper Strands
+    # Shiny Metallic Copper
     mat_copper = bpy.data.materials.new("MetallicCopper")
     mat_copper.use_nodes = True
-    bsdf_cop = mat_copper.node_tree.nodes.get("Principled BSDF")
-    if bsdf_cop:
-        bsdf_cop.inputs['Base Color'].default_value = (0.95, 0.45, 0.22, 1.0)
-        bsdf_cop.inputs['Metallic'].default_value = 0.98
-        bsdf_cop.inputs['Roughness'].default_value = 0.18
+    bsdf_c = mat_copper.node_tree.nodes.get("Principled BSDF")
+    if bsdf_c:
+        bsdf_c.inputs['Base Color'].default_value = (0.95, 0.45, 0.22, 1.0)
+        bsdf_c.inputs['Metallic'].default_value = 0.95
+        bsdf_c.inputs['Roughness'].default_value = 0.22
 
-    # Neon Glowing Cyan Electrons
-    mat_elec = bpy.data.materials.new("NeonElectron")
+    # Copper Atomic Nucleus (Warm Gold/Amber)
+    mat_nucleus = bpy.data.materials.new("CopperNucleus")
+    mat_nucleus.use_nodes = True
+    bsdf_n = mat_nucleus.node_tree.nodes.get("Principled BSDF")
+    if bsdf_n:
+        bsdf_n.inputs['Base Color'].default_value = (1.0, 0.55, 0.1, 1.0)
+        bsdf_n.inputs['Emission Color'].default_value = (1.0, 0.5, 0.05, 1.0)
+        bsdf_n.inputs['Emission Strength'].default_value = 2.0
+        bsdf_n.inputs['Roughness'].default_value = 0.3
+
+    # Glowing Cyan Electric Electron (HUGE & BRIGHT)
+    mat_elec = bpy.data.materials.new("GlowingElectron")
     mat_elec.use_nodes = True
-    bsdf_el = mat_elec.node_tree.nodes.get("Principled BSDF")
-    if bsdf_el:
-        bsdf_el.inputs['Base Color'].default_value = (0.0, 0.9, 1.0, 1.0)
-        if 'Emission Color' in bsdf_el.inputs:
-            bsdf_el.inputs['Emission Color'].default_value = (0.0, 0.95, 1.0, 1.0)
-            bsdf_el.inputs['Emission Strength'].default_value = 18.0
-        elif 'Emission' in bsdf_el.inputs:
-            bsdf_el.inputs['Emission'].default_value = (0.0, 0.95, 1.0, 1.0)
+    bsdf_e = mat_elec.node_tree.nodes.get("Principled BSDF")
+    if bsdf_e:
+        bsdf_e.inputs['Base Color'].default_value = (0.05, 0.95, 1.0, 1.0)
+        bsdf_e.inputs['Emission Color'].default_value = (0.0, 0.9, 1.0, 1.0)
+        bsdf_e.inputs['Emission Strength'].default_value = 10.0 # Blazing bright!
 
-    # Copper Atoms (Orange Lattice Spheres)
-    mat_atom = bpy.data.materials.new("CopperAtom")
-    mat_atom.use_nodes = True
-    bsdf_at = mat_atom.node_tree.nodes.get("Principled BSDF")
-    if bsdf_at:
-        bsdf_at.inputs['Base Color'].default_value = (0.6, 0.25, 0.1, 1.0)
-        bsdf_at.inputs['Roughness'].default_value = 0.4
-        bsdf_at.inputs['Metallic'].default_value = 0.5
-
-    # ==========================================
-    # 3. Macro Cable Geometry (Outer Jacket & Multi-Wires)
-    # ==========================================
-    # Outer black jacket cylinder
+    # 1. Outer Cable & Cutaway
     bpy.ops.mesh.primitive_cylinder_add(radius=1.8, depth=14.0, location=(0, 0, 0))
-    outer_cable = bpy.context.active_object
-    outer_cable.rotation_euler = (0, math.radians(90), 0)
-    outer_cable.data.materials.append(mat_outer)
+    jacket = bpy.context.active_object
+    jacket.rotation_euler = (0, math.radians(90), 0)
+    jacket.data.materials.append(mat_outer)
 
-    # Cut away half of outer jacket along X to reveal inside wires
+    # Cut away top-front half of outer jacket to reveal inside
     bpy.ops.mesh.primitive_cube_add(size=1.0, location=(0, -1.0, 1.0))
-    cut_outer = bpy.context.active_object
-    cut_outer.scale = (16.0, 2.5, 2.5)
-    bool_out = outer_cable.modifiers.new(name="CutOuter", type='BOOLEAN')
-    bool_out.object = cut_outer
-    bool_out.operation = 'DIFFERENCE'
-    bpy.context.view_layer.objects.active = outer_cable
-    bpy.ops.object.modifier_apply(modifier="CutOuter")
-    bpy.data.objects.remove(cut_outer, do_unlink=True)
+    cut_j = bpy.context.active_object
+    cut_j.scale = (16.0, 3.0, 3.0)
+    bool_j = jacket.modifiers.new(name="CutJacket", type='BOOLEAN')
+    bool_j.object = cut_j
+    bool_j.operation = 'DIFFERENCE'
+    bpy.context.view_layer.objects.active = jacket
+    bpy.ops.object.modifier_apply(modifier="CutJacket")
+    bpy.data.objects.remove(cut_j, do_unlink=True)
     bpy.ops.object.shade_smooth()
 
-    # Inner Red and Blue insulated sub-wires
-    bpy.ops.mesh.primitive_cylinder_add(radius=0.75, depth=15.0, location=(0, -0.4, 0.3))
-    wire_red = bpy.context.active_object
-    wire_red.rotation_euler = (0, math.radians(90), 0)
-    wire_red.data.materials.append(mat_wire_red)
-    bpy.ops.object.shade_smooth()
+    # 2. Red Insulated Wire Inside
+    bpy.ops.mesh.primitive_cylinder_add(radius=0.9, depth=14.0, location=(0, -0.4, -0.1))
+    wire_r = bpy.context.active_object
+    wire_r.rotation_euler = (0, math.radians(90), 0)
+    wire_r.data.materials.append(mat_red)
 
-    bpy.ops.mesh.primitive_cylinder_add(radius=0.75, depth=15.0, location=(0, 0.4, -0.3))
-    wire_blue = bpy.context.active_object
-    wire_blue.rotation_euler = (0, math.radians(90), 0)
-    wire_blue.data.materials.append(mat_wire_blue)
-    bpy.ops.object.shade_smooth()
-
-    # Stripped Red Wire exposing Twisted Copper Strands bundle!
-    # Cutaway section of red wire jacket
-    bpy.ops.mesh.primitive_cube_add(size=1.0, location=(0, -0.4, 0.7))
-    cut_red = bpy.context.active_object
-    cut_red.scale = (10.0, 1.2, 1.2)
-    bool_r = wire_red.modifiers.new(name="CutRed", type='BOOLEAN')
-    bool_r.object = cut_red
+    # Cut away section of red wire
+    bpy.ops.mesh.primitive_cube_add(size=1.0, location=(0, -0.6, 0.6))
+    cut_r = bpy.context.active_object
+    cut_r.scale = (16.0, 2.0, 2.0)
+    bool_r = wire_r.modifiers.new(name="CutRed", type='BOOLEAN')
+    bool_r.object = cut_r
     bool_r.operation = 'DIFFERENCE'
-    bpy.context.view_layer.objects.active = wire_red
+    bpy.context.view_layer.objects.active = wire_r
     bpy.ops.object.modifier_apply(modifier="CutRed")
-    bpy.data.objects.remove(cut_red, do_unlink=True)
-
-    # Copper strands bundle inside red wire
-    for angle_deg in range(0, 360, 60):
-        rad = math.radians(angle_deg)
-        sx = 0
-        sy = -0.4 + math.cos(rad) * 0.35
-        sz = 0.3 + math.sin(rad) * 0.35
-        bpy.ops.mesh.primitive_cylinder_add(radius=0.18, depth=15.0, location=(sx, sy, sz))
-        strand = bpy.context.active_object
-        strand.rotation_euler = (0, math.radians(90), 0)
-        strand.data.materials.append(mat_copper)
-        bpy.ops.object.shade_smooth()
-
-    # Center copper core where microscopic zoom happens
-    bpy.ops.mesh.primitive_cylinder_add(radius=0.22, depth=15.0, location=(0, -0.4, 0.3))
-    center_strand = bpy.context.active_object
-    center_strand.rotation_euler = (0, math.radians(90), 0)
-    center_strand.data.materials.append(mat_copper)
+    bpy.data.objects.remove(cut_r, do_unlink=True)
     bpy.ops.object.shade_smooth()
 
-    # ==========================================
-    # 4. Microscopic Atoms and Electrons Lattice
-    # ==========================================
-    random.seed(999)
+    # 3. Metallic Copper Wire Core (HALF-CYLINDER CUTAWAY BED)
+    # The bottom half forms a shiny metallic copper trough/conduit,
+    # top half is OPEN so electrons inside are 100% VISIBLE!
+    bpy.ops.mesh.primitive_cylinder_add(radius=0.55, depth=14.0, location=(0, -0.4, -0.1))
+    copper_core = bpy.context.active_object
+    copper_core.rotation_euler = (0, math.radians(90), 0)
+    copper_core.data.materials.append(mat_copper)
+
+    bpy.ops.mesh.primitive_cube_add(size=1.0, location=(0, -0.4, 0.6))
+    cut_c = bpy.context.active_object
+    cut_c.scale = (16.0, 2.0, 1.2)
+    bool_c = copper_core.modifiers.new(name="CutCopper", type='BOOLEAN')
+    bool_c.object = cut_c
+    bool_c.operation = 'DIFFERENCE'
+    bpy.context.view_layer.objects.active = copper_core
+    bpy.ops.object.modifier_apply(modifier="CutCopper")
+    bpy.data.objects.remove(cut_c, do_unlink=True)
+    bpy.ops.object.shade_smooth()
+
+    # 4. Stationary Copper Nuclei Grid (Orange glowing spheres along track)
+    for i in range(12):
+        nx = (i / 11.0) * 10.0 - 5.0
+        ny = -0.4
+        nz = -0.25
+        bpy.ops.mesh.primitive_uv_sphere_add(radius=0.20, location=(nx, ny, nz))
+        nuc = bpy.context.active_object
+        nuc.data.materials.append(mat_nucleus)
+        bpy.ops.object.shade_smooth()
+
+    # 5. Prominent Glowing Cyan Electrons (Floating above copper track inside the wire canal)
+    random.seed(42)
     electrons = []
-    atoms = []
-
-    # Copper Lattice Atoms (stationary stationary orange spheres)
-    for i in range(25):
-        ax = (i / 25.0) * 8.0 - 4.0
-        ay = -0.4 + random.uniform(-0.3, 0.3)
-        az = 0.3 + random.uniform(-0.3, 0.3)
-        bpy.ops.mesh.primitive_uv_sphere_add(radius=0.14, location=(ax, ay, az))
-        atom_obj = bpy.context.active_object
-        atom_obj.data.materials.append(mat_atom)
-        bpy.ops.object.shade_smooth()
-        atoms.append(atom_obj)
-
-    # 60 Glowing Electron Spheres
-    num_electrons = 60
+    num_electrons = 24 # Fewer, bigger, punchier so each electron is distinct & prominent!
     for i in range(num_electrons):
-        base_x = (i / num_electrons) * 10.0 - 5.0
-        base_y = -0.4 + random.uniform(-0.25, 0.25)
-        base_z = 0.3 + random.uniform(-0.25, 0.25)
+        base_x = (i / float(num_electrons)) * 11.0 - 5.5
+        base_y = -0.4 + random.uniform(-0.18, 0.18)
+        base_z = -0.05 + random.uniform(-0.08, 0.15) # Floating inside the open copper canal
 
-        bpy.ops.mesh.primitive_uv_sphere_add(radius=0.08, location=(base_x, base_y, base_z))
-        sphere = bpy.context.active_object
-        sphere.name = f"ZoomElectron_{i}"
-        sphere.data.materials.append(mat_elec)
+        bpy.ops.mesh.primitive_uv_sphere_add(radius=0.13, location=(base_x, base_y, base_z))
+        elec = bpy.context.active_object
+        elec.name = f"VisElectron_{i}"
+        elec.data.materials.append(mat_elec)
         bpy.ops.object.shade_smooth()
 
-        # Keyframing:
-        # Phase 1: DC Drift (Frames 1 - 260)
-        # Steady drift along +X
-        drift_speed = 0.014
-        drift_dist = drift_speed * 260
+        # Keyframe animations:
+        # Phase 1: DC Drift (Frames 1 - 250)
+        # All electrons slowly drift forward in +X direction
+        drift_dist = 2.2
+        elec.location = (base_x, base_y, base_z)
+        elec.keyframe_insert(data_path="location", frame=1)
 
-        sphere.location = (base_x, base_y, base_z)
-        sphere.keyframe_insert(data_path="location", frame=1)
+        elec.location = (base_x + drift_dist, base_y, base_z)
+        elec.keyframe_insert(data_path="location", frame=250)
 
-        sphere.location = (base_x + drift_dist, base_y, base_z)
-        sphere.keyframe_insert(data_path="location", frame=260)
+        # Phase 2: AC Back-and-Forth Rapid Oscillation (Frames 251 - 580)
+        freq = 0.85 + random.uniform(-0.05, 0.05)
+        amp = 0.35 + random.uniform(-0.05, 0.05)
+        phase = random.uniform(0, math.pi * 2)
 
-        # Phase 2: AC Rapid Vibration (Frames 261 - 560)
-        freq = 0.70 + random.uniform(-0.08, 0.08)
-        amp = 0.28 + random.uniform(-0.04, 0.04)
-        phase_offset = random.uniform(0, math.pi * 2)
+        for f in range(251, 581, 4):
+            t = f - 250
+            dx = math.sin(t * freq + phase) * amp
+            dy = math.cos(t * freq * 0.7 + phase) * 0.03
+            elec.location = (base_x + drift_dist + dx, base_y + dy, base_z)
+            elec.keyframe_insert(data_path="location", frame=f)
 
-        for f in range(261, 561, 3):
-            t = (f - 260)
-            dx = math.sin(t * freq + phase_offset) * amp
-            dy = math.cos(t * freq * 0.8 + phase_offset) * 0.02
-            sphere.location = (base_x + drift_dist + dx, base_y + dy, base_z)
-            sphere.keyframe_insert(data_path="location", frame=f)
+        electrons.append(elec)
 
-        electrons.append(sphere)
+    # 6. Camera Animation - Perfectly focused on the open copper canal & glowing electrons!
+    cam_data = bpy.data.cameras.new("HeroCam")
+    cam_data.lens = 42
+    cam_data.dof.use_dof = False
 
-    # ==========================================
-    # 5. DYNAMIC ZOOM CAMERA ANIMATION (Signature Zack D. Macro-to-Micro Flythrough!)
-    # ==========================================
-    cam_data = bpy.data.cameras.new("ZoomCam")
-    cam_data.lens = 38
-    cam_data.dof.use_dof = True
-    cam_data.dof.focus_distance = 3.5
-    cam_data.dof.aperture_fstop = 2.8
-
-    cam_obj = bpy.data.objects.new("ZoomCam", cam_data)
+    cam_obj = bpy.data.objects.new("HeroCam", cam_data)
     scene.collection.objects.link(cam_obj)
     scene.camera = cam_obj
 
-    # Keyframe 1 (Frame 1): Wide Macro view of the complete cable
-    cam_obj.location = (0.0, -9.5, 5.5)
-    cam_obj.rotation_euler = (math.radians(64), 0, 0)
+    # Keyframe 1 (Frame 1): Macro view of cable
+    cam_obj.location = (0.0, -8.0, 4.5)
+    cam_obj.rotation_euler = (math.radians(65), 0, 0)
     cam_obj.keyframe_insert(data_path="location", frame=1)
     cam_obj.keyframe_insert(data_path="rotation_euler", frame=1)
 
-    # Keyframe 2 (Frame 90): Camera starts plunging inward towards stripped copper section
-    cam_obj.location = (0.0, -5.5, 3.2)
+    # Keyframe 2 (Frame 110): Smooth swoop down directly towards cutaway canal
+    cam_obj.location = (0.0, -4.5, 2.5)
     cam_obj.rotation_euler = (math.radians(58), 0, 0)
-    cam_obj.keyframe_insert(data_path="location", frame=90)
-    cam_obj.keyframe_insert(data_path="rotation_euler", frame=90)
+    cam_obj.keyframe_insert(data_path="location", frame=110)
+    cam_obj.keyframe_insert(data_path="rotation_euler", frame=110)
 
-    # Keyframe 3 (Frame 180): Deep Microscopic Zoom inside the copper strand lattice!
-    cam_obj.location = (0.2, -2.1, 1.4)
+    # Keyframe 3 (Frame 220): Direct close-up into the wire core - electrons fill screen!
+    cam_obj.location = (0.3, -2.2, 1.2)
     cam_obj.rotation_euler = (math.radians(50), 0, math.radians(-10))
-    cam_obj.keyframe_insert(data_path="location", frame=180)
-    cam_obj.keyframe_insert(data_path="rotation_euler", frame=180)
+    cam_obj.keyframe_insert(data_path="location", frame=220)
+    cam_obj.keyframe_insert(data_path="rotation_euler", frame=220)
 
-    # Keyframe 4 (Frame 360): Orbiting close-up around vibrating electron
-    cam_obj.location = (0.5, -1.8, 1.2)
-    cam_obj.rotation_euler = (math.radians(45), 0, math.radians(15))
-    cam_obj.keyframe_insert(data_path="location", frame=360)
-    cam_obj.keyframe_insert(data_path="rotation_euler", frame=360)
+    # Keyframe 4 (Frame 380): Dramatic angle tracking vibrating AC electrons
+    cam_obj.location = (0.6, -1.8, 1.1)
+    cam_obj.rotation_euler = (math.radians(44), 0, math.radians(12))
+    cam_obj.keyframe_insert(data_path="location", frame=380)
+    cam_obj.keyframe_insert(data_path="rotation_euler", frame=380)
 
-    # Keyframe 5 (Frame 560): Final heroic perspective
-    cam_obj.location = (0.1, -1.6, 1.1)
-    cam_obj.rotation_euler = (math.radians(42), 0, math.radians(5))
-    cam_obj.keyframe_insert(data_path="location", frame=560)
-    cam_obj.keyframe_insert(data_path="rotation_euler", frame=560)
+    # Keyframe 5 (Frame 580): Heroic end perspective
+    cam_obj.location = (0.1, -1.7, 1.0)
+    cam_obj.rotation_euler = (math.radians(40), 0, math.radians(4))
+    cam_obj.keyframe_insert(data_path="location", frame=580)
+    cam_obj.keyframe_insert(data_path="rotation_euler", frame=580)
 
-    # ==========================================
-    # 6. Studio Lighting
-    # ==========================================
-    light_key = bpy.data.lights.new("KeyLight", type='AREA')
-    light_key.energy = 550
-    light_key.size = 5.0
-    light_key.color = (0.35, 0.85, 1.0)
-    key_obj = bpy.data.objects.new("KeyLight", light_key)
-    scene.collection.objects.link(key_obj)
-    key_obj.location = (3.5, -3.5, 6.0)
+    # Lighting
+    # Key light
+    l1 = bpy.data.lights.new("Key", type='AREA')
+    l1.energy = 600
+    l1.size = 5.0
+    l1.color = (0.5, 0.85, 1.0)
+    o1 = bpy.data.objects.new("Key", l1)
+    o1.location = (3.0, -4.0, 5.0)
+    scene.collection.objects.link(o1)
 
-    light_rim = bpy.data.lights.new("RimLight", type='POINT')
-    light_rim.energy = 400
-    light_rim.color = (1.0, 0.5, 0.2)
-    rim_obj = bpy.data.objects.new("RimLight", light_rim)
-    scene.collection.objects.link(rim_obj)
-    rim_obj.location = (-4.0, -3.0, 3.0)
+    # Warm rim light
+    l2 = bpy.data.lights.new("Rim", type='POINT')
+    l2.energy = 500
+    l2.color = (1.0, 0.55, 0.15)
+    o2 = bpy.data.objects.new("Rim", l2)
+    o2.location = (-4.0, -3.0, 3.0)
+    scene.collection.objects.link(o2)
 
-    # Set interpolation to bezier for smooth dramatic camera swoops
-    if cam_obj.animation_data and cam_obj.animation_data.action:
-        for fcurve in cam_obj.animation_data.action.fcurves:
-            for kp in fcurve.keyframe_points:
-                kp.interpolation = 'BEZIER'
-
-    # Render settings
-    out_dir = r"scratch"
-    os.makedirs(out_dir, exist_ok=True)
-    out_file = os.path.join(out_dir, "blender_cable_zoom_1080x1920.mp4")
-
+    # Render setup
     scene.render.image_settings.file_format = 'FFMPEG'
     scene.render.ffmpeg.format = 'MPEG4'
     scene.render.ffmpeg.codec = 'H264'
@@ -295,9 +247,10 @@ def build_cable_zoom_scene():
     scene.render.ffmpeg.ffmpeg_preset = 'REALTIME'
     scene.render.filepath = os.path.abspath(out_file)
 
-    print(f"[BLENDER] Starting render of {scene.frame_end} frames to {out_file}...")
-    bpy.ops.render.render(animation=True)
-    print(f"[BLENDER] Render finished successfully! Output: {out_file}")
+    if do_render:
+        print(f"[BLENDER] Rendering {scene.frame_end} frames to {out_file}...")
+        bpy.ops.render.render(animation=True)
+        print("[BLENDER] Done!")
 
 if __name__ == "__main__":
-    build_cable_zoom_scene()
+    build_perfect_electron_scene()
