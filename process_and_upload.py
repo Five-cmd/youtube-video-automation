@@ -1964,6 +1964,7 @@ def pick_next_topic(
                         return {
                             "id": t_id,
                             "style": item.get("style", "real_experiment"),
+                            "script_file": item.get("script_file"),
                             "query": q_clean,
                             "hook": item.get("hook", f"WAIT... {item.get('title', '').split(':')[0].upper()}?!"),
                             "title": title_clean,
@@ -2014,6 +2015,7 @@ def pick_next_topic(
                     return {
                         "id": t_id,
                         "style": item.get("style", "real_experiment"),
+                        "script_file": item.get("script_file"),
                         "query": q_clean,
                         "hook": item.get("hook", f"WAIT... {item.get('title', '').split(':')[0].upper()}?!"),
                         "title": title_clean,
@@ -2909,9 +2911,14 @@ def create_and_upload_one(
     # Content-Accurate 3D Blender Simulation Routing
     blender_script = topic.get("script_file")
     if not blender_script:
-        cand = Path("scratch") / f"blender_{topic['id']}.py"
-        if cand.exists():
-            blender_script = str(cand)
+        for cand in [
+            Path("scratch") / f"blender_{topic['id']}.py",
+            Path("scratch") / f"blender_{topic['id'].replace('_3d', '')}.py",
+            Path("scratch") / f"blender_{topic['id'].replace('_sound', '')}.py",
+        ]:
+            if cand.exists():
+                blender_script = str(cand)
+                break
 
     blender_exe = shutil.which("blender")
     if not blender_exe and sys.platform == "win32" and os.path.exists(r"C:\Users\acer\blender\blender.exe"):
