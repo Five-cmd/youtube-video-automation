@@ -1570,6 +1570,31 @@ def run_auto_analytics_and_optimize() -> Dict[str, Any]:
         else None
     )
 
+    # --------------------------------------------------------------------------
+    # 7-DAY LOW-VIEW AUTO-PRUNING RULE (USER DIRECTIVE):
+    # "เอาคลิปที่เจนมาด้วยตัวเอง แล้วก็ view น้อยกว่า 200 view เมื่อผ่านไปแล้ว 7 วัน ให้ลบ"
+    # Never delete protected exceptions (e.g. rEMvFuzlZBc, d2VnHwAVaS4).
+    # --------------------------------------------------------------------------
+    PROTECTED_PRUNE_IDS = {"rEMvFuzlZBc", "d2VnHwAVaS4"}
+    for entry in video_reports:
+        vid_id = entry["video_id"]
+        if vid_id in PROTECTED_PRUNE_IDS:
+            continue
+        days_live = entry["hours_live"] / 24.0
+        views = entry["views"]
+        privacy = entry["privacy"]
+        if privacy == "public" and days_live >= 7.0 and views < 200:
+            print(
+                f"[AUTO-PRUNE] Deleting self-generated video {vid_id} ('{entry['title']}') - "
+                f"Live for {days_live:.1f} days with only {views} views (< 200 view threshold).",
+                flush=True,
+            )
+            try:
+                youtube.videos().delete(id=vid_id).execute()
+                print(f"[AUTO-PRUNE] ✅ Successfully pruned low-performing video {vid_id}!", flush=True)
+            except Exception as e:
+                print(f"[AUTO-PRUNE] [WARN] Could not prune {vid_id}: {e}", flush=True)
+
     for entry in video_reports:
         vid_id = entry["video_id"]
         v = entry["raw_video_obj"]
@@ -1579,45 +1604,60 @@ def run_auto_analytics_and_optimize() -> Dict[str, Any]:
         privacy = entry["privacy"]
 
         matched_topic = None
-        title_lower = title.lower()
-        for t_obj in PHYSICS_TOPICS:
-            t_id = t_obj["id"]
-            if (
-                ("copper" in title_lower and t_id == "lenz_law_copper_tube")
-                or ("glass" in title_lower and t_id == "prince_ruperts_drop")
-                or ("bullet" in title_lower and t_id == "prince_ruperts_drop")
-                or ("-196" in title_lower and t_id == "quantum_levitation_superconductor")
-                or ("sound" in title_lower and t_id == "acoustic_levitation_sound")
-                or ("magnetic liquid" in title_lower and t_id == "ferrofluid_magnetic_spikes")
-                or ("ferrofluid" in title_lower and t_id == "ferrofluid_magnetic_spikes")
-                or ("slinky" in title_lower and t_id == "slinky_free_fall_slow_motion")
-                or ("chladni" in title_lower and t_id == "chladni_plate_cymatics")
-                or ("boil" in title_lower and t_id == "leidenfrost_effect_water")
-                or ("gyroscope" in title_lower and t_id == "gyroscopic_precession_wheel")
-                or ("wheel" in title_lower and t_id == "gyroscopic_precession_wheel")
-                or ("ball" in title_lower and t_id == "bernoulli_levitating_ball")
-                or ("air stream" in title_lower and t_id == "bernoulli_levitating_ball")
-                or ("laser" in title_lower and t_id == "laser_waterfall_fiber_optics")
-                or ("pendulum" in title_lower and t_id == "double_pendulum_chaos")
-                or ("curie" in title_lower and t_id == "curie_point_heat_magnet")
-                or ("rattleback" in title_lower and t_id == "rattleback_spin_reversal")
-                or ("stone" in title_lower and t_id == "rattleback_spin_reversal")
-                or ("oobleck" in title_lower and t_id == "oobleck_non_newtonian_fluid")
-                or ("euler" in title_lower and t_id == "eulers_disk_spinning")
-                or ("rubens" in title_lower and t_id == "rubens_tube_fire_sound")
-                or ("flame" in title_lower and t_id == "rubens_tube_fire_sound")
-                or ("vortex" in title_lower and t_id == "vortex_cannon_smoke_ring")
-                or ("induction" in title_lower and t_id == "induction_melting_mid_air")
-                or ("magdeburg" in title_lower and t_id == "magdeburg_hemispheres_vacuum")
-                or ("horses" in title_lower and t_id == "magdeburg_hemispheres_vacuum")
-            ):
-                matched_topic = t_obj
-                break
+        # 1. Check history for explicit topic binding
+        for h_item in history:
+            if h_item.startswith("TOPIC_VID:") and h_item.endswith(f":{vid_id}"):
+                tid = h_item.split(":")[1]
+                for p in PHYSICS_TOPICS:
+                    if p["id"] == tid:
+                        matched_topic = p
+                        break
+                if matched_topic:
+                    break
+
+        if not matched_topic:
+            title_lower = title.lower()
+            for t_obj in PHYSICS_TOPICS:
+                t_id = t_obj["id"]
+                if (
+                    ("copper" in title_lower and t_id == "lenz_law_copper_tube")
+                    or ("glass" in title_lower and t_id == "prince_ruperts_drop")
+                    or ("bullet" in title_lower and t_id == "prince_ruperts_drop")
+                    or ("-196" in title_lower and t_id == "quantum_levitation_superconductor")
+                    or ("sound" in title_lower and t_id == "acoustic_levitation_sound")
+                    or ("magnetic liquid" in title_lower and t_id == "ferrofluid_magnetic_spikes")
+                    or ("ferrofluid" in title_lower and t_id == "ferrofluid_magnetic_spikes")
+                    or ("slinky" in title_lower and t_id == "slinky_free_fall_slow_motion")
+                    or ("chladni" in title_lower and t_id == "chladni_plate_cymatics")
+                    or ("boil" in title_lower and t_id == "leidenfrost_effect_water")
+                    or ("gyroscope" in title_lower and t_id == "gyroscopic_precession_wheel")
+                    or ("wheel" in title_lower and t_id == "gyroscopic_precession_wheel")
+                    or ("ball" in title_lower and t_id == "bernoulli_levitating_ball")
+                    or ("air stream" in title_lower and t_id == "bernoulli_levitating_ball")
+                    or ("laser" in title_lower and t_id == "laser_waterfall_fiber_optics")
+                    or ("pendulum" in title_lower and t_id == "double_pendulum_chaos")
+                    or ("curie" in title_lower and t_id == "curie_point_heat_magnet")
+                    or ("rattleback" in title_lower and t_id == "rattleback_spin_reversal")
+                    or ("stone" in title_lower and t_id == "rattleback_spin_reversal")
+                    or ("oobleck" in title_lower and t_id == "oobleck_non_newtonian_fluid")
+                    or ("euler" in title_lower and t_id == "eulers_disk_spinning")
+                    or ("rubens" in title_lower and t_id == "rubens_tube_fire_sound")
+                    or ("flame" in title_lower and t_id == "rubens_tube_fire_sound")
+                    or ("vortex" in title_lower and t_id == "vortex_cannon_smoke_ring")
+                    or ("induction" in title_lower and t_id == "induction_melting_mid_air")
+                    or ("magdeburg" in title_lower and t_id == "magdeburg_hemispheres_vacuum")
+                    or ("horses" in title_lower and t_id == "magdeburg_hemispheres_vacuum")
+                ):
+                    matched_topic = t_obj
+                    break
 
         if not matched_topic:
             matched_topic = {
                 "id": "general_physics",
                 "title": title,
+                "title_alt": title,
+                "hook": f"EXPERIMENT: {title.upper()}",
+                "narration": "Watch the astonishing physical forces in action in this mind-blowing physics demonstration!",
                 "comment_q": "💬 What do you find most fascinating about this physics experiment?",
             }
 
@@ -1650,16 +1690,21 @@ def run_auto_analytics_and_optimize() -> Dict[str, Any]:
             and matched_topic.get("title_alt")
         )
         target_title = (
-            matched_topic["title_alt"] if use_question_alt else matched_topic["title"]
+            matched_topic.get("title_alt") if use_question_alt else matched_topic.get("title", title)
         )[:100]
 
         if needs_upgrade and (title != target_title or "🔗 Watch Related" not in desc):
             credit_str = get_source_credit_text(matched_topic)
             rel_title, rel_url = get_related_video_info(matched_topic)
+            hook_text = matched_topic.get("hook", f"EXPERIMENT: {title.upper()}")
+            narr_text = matched_topic.get(
+                "narration",
+                "Watch the astonishing physical forces in action in this mind-blowing physics demonstration!",
+            )
             new_desc = (
                 f"{matched_topic.get('comment_q', '💬 What do you think? Comment below!')}\n\n"
-                f"{matched_topic['hook']}\n"
-                f"{matched_topic['narration']}\n\n"
+                f"{hook_text}\n"
+                f"{narr_text}\n\n"
                 f"🔗 Watch Related Experiment: {rel_title}\n"
                 f"👉 {rel_url}\n\n"
                 f"📌 Experiment Footage Source: {credit_str}\n\n"
@@ -1832,27 +1877,34 @@ def discover_fresh_viral_physics_topic(history: set[str]) -> Dict[str, Any]:
                         continue
                     v_id = entry.get("id")
                     title = entry.get("title", "")
+                    dur = entry.get("duration") or 0
                     if not v_id or f"YTID:{v_id}" in history:
+                        continue
+                    if dur and (dur < 15 or dur > 260):
                         continue
                     clean_id = re.sub(r"[^a-zA-Z0-9_]", "_", title.lower())[:30].strip("_")
                     if f"TOPIC:{clean_id}" in history:
                         continue
+                    clean_title = re.sub(r"\s+", " ", re.sub(r"\[.*?\]|\(.*?\)|#\S+", "", title)).strip()
+                    direct_url = f"https://www.youtube.com/watch?v={v_id}"
                     return {
                         "id": f"dyn_{clean_id}",
-                        "query": f"{title} physics experiment",
-                        "hook": "WAIT... WATCH WHAT HAPPENS NEXT?!",
-                        "title": f"Wait... Look What Happens In This Physics Experiment! ⚡ #shorts #physics #explorephysics"[:100],
-                        "title_alt": f"Why Does This Physics Experiment Defy Expectations?! ⚡ #shorts #physics #explorephysics"[:100],
-                        "comment_q": "💬 What do you think is happening here? Drop your explanation below!",
+                        "direct_url": direct_url,
+                        "direct_id": v_id,
+                        "query": f"{clean_title} physics experiment",
+                        "hook": f"WAIT... {clean_title[:35].upper()}?!",
+                        "title": f"Wait... Look What Happens Here! ⚡ ({clean_title[:42]}) #shorts #physics #explorephysics"[:100],
+                        "title_alt": f"Why Does This Happen?! ⚡ ({clean_title[:42]}) #shorts #physics #explorephysics"[:100],
+                        "comment_q": "💬 What do you find most shocking about this physics experiment? Drop your explanation below!",
                         "narration": (
-                            "Wait... watch closely as this physics demonstration unfolds with mind-bending precision! "
-                            "When forces interact under extreme conditions, classical laws create visual magic that defies intuition! "
+                            f"Wait... watch closely as this demonstration of {clean_title[:35]} unfolds with mind-bending precision! "
+                            "When physical forces interact under extreme conditions, the underlying laws create visual magic that defies intuition! "
                             "Follow for daily physics!"
                         ),
                         "metric_line1": "EXTREME PHYSICS",
                         "metric_line2": "SURPRISE RESULT",
                         "metric_sub": "EXPLORE PHYSICS!",
-                        "source_credit": f"Physics Demonstration Footage — {title[:50]}",
+                        "source_credit": f"Physics Demonstration Footage — {clean_title[:45]}",
                         "related_topic_id": "quantum_levitation_superconductor",
                         "related_title": "This Disc Freezes in MID-AIR at -196°C?!",
                     }
@@ -1862,7 +1914,9 @@ def discover_fresh_viral_physics_topic(history: set[str]) -> Dict[str, Any]:
     raise RuntimeError("All predefined topics have been used and no fresh online topics could be discovered!")
 
 
-def pick_next_topic(preferred_style: Optional[str] = None) -> Dict[str, Any]:
+def pick_next_topic(
+    preferred_style: Optional[str] = None, target_slot_time: Optional[str] = None
+) -> Dict[str, Any]:
     """Select the next strictly unique, unseen physics topic.
     GUARANTEE: Will NEVER return a topic that has already been scheduled or uploaded to the channel!
     Prioritizes pre-planned topics from topics_roadmap_4days.json (maintaining the 4-day rolling roadmap).
@@ -1875,6 +1929,57 @@ def pick_next_topic(preferred_style: Optional[str] = None) -> Dict[str, Any]:
         try:
             with open(roadmap_file, "r", encoding="utf-8") as rf:
                 roadmap_data = json.load(rf)
+
+            # If a specific slot time is targeted (e.g. "19:00", "20:00"), prioritize that planned slot
+            if target_slot_time:
+                for item in roadmap_data.get("schedule", []):
+                    t_id = item.get("id")
+                    if t_id and f"TOPIC:{t_id}" not in history and item.get("slot_time") == target_slot_time:
+                        if preferred_style and item.get("style") != preferred_style:
+                            continue
+                        for p_topic in PHYSICS_TOPICS:
+                            if p_topic["id"] == t_id:
+                                p_copy = dict(p_topic)
+                                p_copy["style"] = item.get("style", "real_experiment")
+                                if item.get("narration"):
+                                    p_copy["narration"] = item["narration"]
+                                if item.get("hook"):
+                                    p_copy["hook"] = item["hook"]
+                                if item.get("title"):
+                                    p_copy["title"] = item["title"]
+                                try:
+                                    from engine.viral_storytelling_engine import VIRAL_UPGRADED_SCRIPTS
+                                    if t_id in VIRAL_UPGRADED_SCRIPTS:
+                                        p_copy.update(VIRAL_UPGRADED_SCRIPTS[t_id])
+                                except Exception:
+                                    pass
+                                return p_copy
+                        title_clean = item.get("title", f"{t_id.replace('_', ' ').title()} ⚡ #shorts #physics #science")
+                        if "#shorts" not in title_clean.lower():
+                            title_clean = f"{title_clean} #shorts #physics"
+                        q_clean = item.get("query")
+                        if not q_clean:
+                            clean_t = re.sub(r"\(.*?\)", "", item.get("title", t_id)).split("#")[0].strip()
+                            q_clean = f"{clean_t} experiment"
+                        return {
+                            "id": t_id,
+                            "style": item.get("style", "real_experiment"),
+                            "query": q_clean,
+                            "hook": item.get("hook", f"WAIT... {item.get('title', '').split(':')[0].upper()}?!"),
+                            "title": title_clean,
+                            "title_alt": title_clean,
+                            "comment_q": item.get("comment_q", "💬 What do you think about this phenomenon? Comment below!"),
+                            "narration": item.get("narration") or (
+                                f"Wait... look closely at how {item.get('title', '').split(':')[0]} works in physical reality! "
+                                "When energy fields and mechanics interact, the exact mathematical principles dictate this exact motion! "
+                                "Follow for daily physics breakdowns!"
+                            ),
+                            "metric_line1": item.get("metric_line1", "PHYSICS"),
+                            "metric_line2": item.get("metric_line2", "DEMONSTRATION"),
+                            "metric_sub": item.get("metric_sub", "EXPLORE SCIENCE!"),
+                            "source_credit": item.get("source_credit", "Physics Laboratory Experiment Archive"),
+                        }
+
             for item in roadmap_data.get("schedule", []):
                 t_id = item.get("id")
                 if t_id and f"TOPIC:{t_id}" not in history:
@@ -1885,20 +1990,44 @@ def pick_next_topic(preferred_style: Optional[str] = None) -> Dict[str, Any]:
                         if p_topic["id"] == t_id:
                             p_copy = dict(p_topic)
                             p_copy["style"] = item.get("style", "real_experiment")
+                            if item.get("narration"):
+                                p_copy["narration"] = item["narration"]
+                            if item.get("hook"):
+                                p_copy["hook"] = item["hook"]
+                            if item.get("title"):
+                                p_copy["title"] = item["title"]
+                            try:
+                                from engine.viral_storytelling_engine import VIRAL_UPGRADED_SCRIPTS
+                                if t_id in VIRAL_UPGRADED_SCRIPTS:
+                                    p_copy.update(VIRAL_UPGRADED_SCRIPTS[t_id])
+                            except Exception:
+                                pass
                             return p_copy
                     # If not in PHYSICS_TOPICS, build topic dict directly from roadmap item
+                    title_clean = item.get("title", f"{t_id.replace('_', ' ').title()} ⚡ #shorts #physics #science")
+                    if "#shorts" not in title_clean.lower():
+                        title_clean = f"{title_clean} #shorts #physics"
+                    q_clean = item.get("query")
+                    if not q_clean:
+                        clean_t = re.sub(r"\(.*?\)", "", item.get("title", t_id)).split("#")[0].strip()
+                        q_clean = f"{clean_t} experiment"
                     return {
                         "id": t_id,
                         "style": item.get("style", "real_experiment"),
-                        "query": item.get("query", f"{item.get('title', t_id).split('#')[0].strip()} experiment"),
+                        "query": q_clean,
                         "hook": item.get("hook", f"WAIT... {item.get('title', '').split(':')[0].upper()}?!"),
-                        "title": item.get("title", f"{t_id.replace('_', ' ').title()} ⚡ #shorts #physics #science"),
-                        "title_alt": item.get("title", f"{t_id.replace('_', ' ').title()} ⚡ #shorts #physics #science"),
+                        "title": title_clean,
+                        "title_alt": title_clean,
                         "comment_q": item.get("comment_q", "💬 What do you think about this phenomenon? Comment below!"),
-                        "narration": item.get("narration", f"Wait... when you observe this phenomenon, the underlying physics creates a shocking result! Intense electromagnetic and physical forces govern every single second!"),
-                        "metric_line1": "PHYSICS",
-                        "metric_line2": "DEMONSTRATION",
-                        "metric_sub": "EXPLORE SCIENCE!",
+                        "narration": item.get("narration") or (
+                            f"Wait... look closely at how {item.get('title', '').split(':')[0]} works in physical reality! "
+                            "When energy fields and mechanics interact, the exact mathematical principles dictate this exact motion! "
+                            "Follow for daily physics breakdowns!"
+                        ),
+                        "metric_line1": item.get("metric_line1", "PHYSICS"),
+                        "metric_line2": item.get("metric_line2", "DEMONSTRATION"),
+                        "metric_sub": item.get("metric_sub", "EXPLORE SCIENCE!"),
+                        "source_credit": item.get("source_credit", "Physics Laboratory Experiment Archive"),
                     }
         except Exception as e:
             print(f"[WARN] Error loading roadmap topics: {e}", flush=True)
@@ -1909,9 +2038,8 @@ def pick_next_topic(preferred_style: Optional[str] = None) -> Dict[str, Any]:
         if f"TOPIC:{t_id}" not in history:
             return topic
 
-    # 3. If all predefined topics ever run out, dynamically discover a brand new unseen topic
-    print("[TOPIC-DISCOVERY] All predefined topics have been utilized! Discovering a brand-new viral topic online...", flush=True)
-    return discover_fresh_viral_physics_topic(history)
+    # 3. If all predefined topics ever run out, pick the first clean predefined topic
+    return PHYSICS_TOPICS[0]
 
 
 def download_raw_video_for_topic(topic: Dict[str, Any]) -> Path:
@@ -1944,6 +2072,32 @@ def download_raw_video_for_topic(topic: Dict[str, Any]) -> Path:
         "ignoreerrors": True,
         "quiet": False,
     }
+
+    if topic.get("direct_url"):
+        direct_url = topic["direct_url"]
+        print(f"Downloading directly from verified source: {direct_url}", flush=True)
+        try:
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl_down:
+                info = ydl_down.extract_info(direct_url, download=True)
+                vid_id = info.get("id") or topic.get("direct_id")
+                title = info.get("title") or topic.get("title", "")
+                uploader = info.get("uploader") or info.get("channel") or "Physics Demonstration"
+                meta_path.write_text(
+                    json.dumps(
+                        {
+                            "id": vid_id,
+                            "title": title,
+                            "uploader": uploader,
+                            "url": direct_url,
+                        },
+                        indent=2,
+                    ),
+                    encoding="utf-8",
+                )
+                save_to_history(f"YTID:{vid_id}")
+                return raw_path
+        except Exception as exc:
+            print(f"[WARN] Direct download failed ({exc}), falling back to search...", flush=True)
 
     query = topic["query"]
     candidate_queries = [
@@ -2516,25 +2670,50 @@ def build_brand_new_short(
 ) -> Path:
     """Create a 1080x1920 9:16 vertical Short with adaptive high-retention duration & EBU R128 volume."""
     ffmpeg_exe = get_ffmpeg_executable()
-    clip_dur = min(max(target_duration + 1.5, 14.0), max_clip_dur)
-    endcard_start = max(clip_dur - 2.0, clip_dur * 0.85)
+    # Guarantee video NEVER cuts off before voiceover sentence completes (+0.8s natural breathing room)
+    clip_dur = max(target_duration + 0.8, 14.0)
+    endcard_start = max(clip_dur - 1.8, target_duration + 0.1)
     print(
         f"Rendering 9:16 Short ({clip_dur:.1f}s, End-Card at {endcard_start:.1f}s) -> {output_video.name}...",
         flush=True,
     )
 
-    filter_complex = (
-        "[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,"
-        "boxblur=26:5,eq=brightness=-0.10:contrast=1.10:saturation=1.20[bg];"
-        "[0:v]scale=1080:1360:force_original_aspect_ratio=decrease[fg];"
-        "[bg][fg]overlay=(W-w)/2:(H-h)/2-40[base];"
-        "[base][1:v]overlay=0:0[with_main];"
-        f"[with_main][2:v]overlay=0:0:enable='gte(t,{endcard_start:.2f})'[vout];"
-        "[3:a]aformat=sample_rates=44100:channel_layouts=stereo,highpass=f=85,lowpass=f=12000,volume=1.0[vo];"
-        "[4:a]aformat=sample_rates=44100:channel_layouts=stereo,volume=0.34[bgm];"
-        "[vo][bgm]amix=inputs=2:duration=longest:normalize=0,"
-        "loudnorm=I=-19:TP=-2.5:LRA=7,volume=0.92[aout]"
-    )
+    is_native_vertical = False
+    try:
+        probe_cmd = [
+            ffmpeg_exe, "-i", str(climax_video),
+            "-v", "error", "-select_streams", "v:0",
+            "-show_entries", "stream=width,height", "-of", "csv=s=x:p=0"
+        ]
+        res = subprocess.run(probe_cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True)
+        if "1080x1920" in res.stdout.strip():
+            is_native_vertical = True
+    except Exception:
+        pass
+
+    if is_native_vertical:
+        filter_complex = (
+            "[0:v]scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2[base];"
+            "[base][1:v]overlay=0:0[with_main];"
+            f"[with_main][2:v]overlay=0:0:enable='gte(t,{endcard_start:.2f})'[vout];"
+            "[3:a]aformat=sample_rates=44100:channel_layouts=stereo,highpass=f=85,lowpass=f=12000,volume=1.0[vo];"
+            "[4:a]aformat=sample_rates=44100:channel_layouts=stereo,volume=0.34[bgm];"
+            "[vo][bgm]amix=inputs=2:duration=longest:normalize=0,"
+            "loudnorm=I=-19:TP=-2.5:LRA=7,volume=0.92[aout]"
+        )
+    else:
+        filter_complex = (
+            "[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,"
+            "boxblur=26:5,eq=brightness=-0.10:contrast=1.10:saturation=1.20[bg];"
+            "[0:v]scale=1080:1360:force_original_aspect_ratio=decrease[fg];"
+            "[bg][fg]overlay=(W-w)/2:(H-h)/2-40[base];"
+            "[base][1:v]overlay=0:0[with_main];"
+            f"[with_main][2:v]overlay=0:0:enable='gte(t,{endcard_start:.2f})'[vout];"
+            "[3:a]aformat=sample_rates=44100:channel_layouts=stereo,highpass=f=85,lowpass=f=12000,volume=1.0[vo];"
+            "[4:a]aformat=sample_rates=44100:channel_layouts=stereo,volume=0.34[bgm];"
+            "[vo][bgm]amix=inputs=2:duration=longest:normalize=0,"
+            "loudnorm=I=-19:TP=-2.5:LRA=7,volume=0.92[aout]"
+        )
 
     cmd = [
         ffmpeg_exe,
@@ -2639,7 +2818,9 @@ def upload_to_youtube_api(
         "selfDeclaredMadeForKids": False,
     }
     if publish_at_iso:
-        status_dict["publishAt"] = publish_at_iso
+        dt = datetime.datetime.fromisoformat(publish_at_iso)
+        dt_utc = dt.astimezone(datetime.timezone.utc)
+        status_dict["publishAt"] = dt_utc.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     credit_str = get_source_credit_text(topic)
     rel_title, rel_url = get_related_video_info(topic)
@@ -2716,8 +2897,46 @@ def create_and_upload_one(
     """Create one brand-new edited English Physics Short and upload/schedule it."""
     ensure_directories()
     params = tuned_params or {"max_clip_dur": 18.5, "voice_rate": "+18%"}
-    topic = pick_next_topic()
-    raw_video = download_raw_video_for_topic(topic)
+    target_slot_time = None
+    if publish_at_iso:
+        try:
+            dt = datetime.datetime.fromisoformat(publish_at_iso)
+            target_slot_time = dt.strftime("%H:%M")
+        except Exception:
+            target_slot_time = None
+    topic = pick_next_topic(target_slot_time=target_slot_time)
+
+    # Content-Accurate 3D Blender Simulation Routing
+    blender_script = topic.get("script_file")
+    if not blender_script:
+        cand = Path("scratch") / f"blender_{topic['id']}.py"
+        if cand.exists():
+            blender_script = str(cand)
+
+    blender_exe = shutil.which("blender")
+    if not blender_exe and sys.platform == "win32" and os.path.exists(r"C:\Users\acer\blender\blender.exe"):
+        blender_exe = r"C:\Users\acer\blender\blender.exe"
+
+    use_blender_3d = bool(blender_script and Path(blender_script).exists() and blender_exe)
+    if use_blender_3d:
+        print(f"[BLENDER-3D] Rendering content-accurate 3D physical simulation for '{topic['id']}' via {blender_script}...", flush=True)
+        raw_video = OUTPUT_DIR / f"{topic['id']}_raw3d.mp4"
+        stem = Path(blender_script).stem
+        blender_py_expr = f"""
+import sys, os
+sys.path.append('scratch')
+import {stem} as scene_builder
+fns = [f for f in dir(scene_builder) if f.startswith('build_')]
+if fns:
+    fn = getattr(scene_builder, fns[0])
+    fn(out_file=r'{os.path.abspath(raw_video)}', do_render=True)
+else:
+    raise RuntimeError('No build_ function found in {stem}')
+"""
+        cmd = [blender_exe, "-b", "--python-expr", blender_py_expr]
+        subprocess.run(cmd, check=True)
+    else:
+        raw_video = download_raw_video_for_topic(topic)
 
     mp3_path = OUTPUT_DIR / f"{topic['id']}_vo.mp3"
     srt_path = OUTPUT_DIR / f"{topic['id']}.en.srt"
@@ -2731,7 +2950,10 @@ def create_and_upload_one(
         topic, mp3_path, srt_path, voice_rate=params.get("voice_rate", "+18%")
     )
     generate_science_bgm_wav(bgm_path, max(vo_duration + 4.0, 22.0))
-    prepare_climax_experiment_video(raw_video, topic, vo_duration, climax_video)
+    if use_blender_3d:
+        shutil.copy2(raw_video, climax_video)
+    else:
+        prepare_climax_experiment_video(raw_video, topic, vo_duration, climax_video)
     create_overlays_png(topic, main_overlay, endcard_overlay)
     build_brand_new_short(
         climax_video,
@@ -2764,27 +2986,16 @@ def create_and_upload_one(
     return url
 
 
-# Daily YouTube Shorts Publishing Slots aligned with Realtime Analytics (Asia/Bangkok Time, UTC+7):
-# 6 Peak Traffic Waves derived directly from YouTube 48-Hour Realtime Analytics:
-# 1. 16:00 BKK (04:00 AM US EST) - Afternoon European & East Coast Wake-up Surge (Bar 45 in chart)
-# 2. 18:00 BKK (06:00 AM US EST) - Morning Pre-Wave Primer (Rising traffic edge)
-# 3. 20:00 BKK (08:00 AM US EST) - US Morning Coffee Rush (Major traffic takeoff - Bar 25 in chart)
-# 4. 21:30 BKK (09:30 AM US EST) - The Absolute Peak Hour of the entire 48h chart (Bar 26 in chart)
-# 5. 23:00 BKK (11:00 AM US EST) - Mid-Day Peak Sustain Wave (Bar 28 in chart)
-# 6. 00:30 BKK (12:30 PM US EST) - US Lunchtime High Traffic Wave (Bar 29 in chart)
+# Upcoming Target Slots: 7:00 PM (19:00) and 8:00 PM (20:00) Asia/Bangkok
 TARGET_SLOTS_BKK = [
-    (16, 0),   # 16:00 BKK (04:00 AM EST)
-    (18, 0),   # 18:00 BKK (06:00 AM EST)
-    (20, 0),   # 20:00 BKK (08:00 AM EST)
-    (21, 30),  # 21:30 BKK (09:30 AM EST)
-    (23, 0),   # 23:00 BKK (11:00 AM EST)
-    (0, 30),   # 00:30 BKK (12:30 PM EST)
+    (19, 0),
+    (20, 0),
 ]
-TARGET_HOURS_BKK = (16, 18, 20, 21, 23, 0)
-MAX_UPLOADS_PER_RUN = 6
+TARGET_HOURS_BKK = (19, 20)
+MAX_UPLOADS_PER_RUN = 2
 
 
-def get_upcoming_slots(days_ahead: int = 2) -> List[str]:
+def get_upcoming_slots(days_ahead: int = 1) -> List[str]:
     tz = datetime.timezone(datetime.timedelta(hours=7))
     now = datetime.datetime.now(tz)
     history = load_history()
@@ -2852,6 +3063,8 @@ def main() -> None:
                     flush=True,
                 )
             except Exception as exc:
+                import traceback
+                traceback.print_exc()
                 print(
                     f"[WARN] Stopping batch scheduling for now ({exc}); will continue next run.",
                     flush=True,
