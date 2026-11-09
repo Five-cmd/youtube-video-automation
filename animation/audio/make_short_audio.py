@@ -101,10 +101,10 @@ def build_audio(comp: str) -> Path:
 
     pre = v + m_ducked + s_fit
     g_master = dbg(M.TARGET_LUFS - integrated(pre))
-    master, _ = M.limit(pre * g_master)
+    master, _ = M.limiter(pre * g_master)
     # Fine trim to hit -15.0 LUFS after limiting
     master *= dbg(M.TARGET_LUFS - integrated(master))
-    master, _ = M.limit(master)
+    master, _ = M.limiter(master)
 
     out_dir = ANIM / "out" / comp
     out_dir.mkdir(parents=True, exist_ok=True)
