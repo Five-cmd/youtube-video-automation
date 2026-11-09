@@ -1065,6 +1065,48 @@ PHYSICS_TOPICS: List[Dict[str, Any]] = [
         "related_topic_id": "ac_dc_electron_drift_3d",
         "related_title": "AC vs DC: What REALLY Happens Inside Wire",
     },
+    {
+        "id": "laminar_flow_reversible_mixing",
+        "query": "laminar flow corn syrup dye experiment",
+        "hook": "WAIT... TURNING A CRANK BACKWARDS UN-MIXES PAINT?!",
+        "title": "Mixing Paint Backwards UN-MIXES It Completely?! 🌀🎨 #shorts #physics #science",
+        "title_alt": "Wait... You Can UN-MIX Colors Just By Reversing Fluid Motion?! 🌀 #shorts #physics",
+        "comment_q": "💬 Does physical entropy increase if you reverse laminar mixing? Comment below!",
+        "narration": (
+            "Watch what happens when colored dye is stirred into thick corn syrup. "
+            "The colors seem permanently blended. But turn the cylinder backward, "
+            "and the colors completely separate back into perfect droplets! "
+            "This is called Laminar Flow. At low Reynolds numbers, viscous forces dominate over inertia. "
+            "Reverse the motion, and every fluid molecule retraces its path in reverse!"
+        ),
+        "metric_line1": "REYNOLDS NO: Re << 1",
+        "metric_line2": "LAMINAR FLOW",
+        "metric_sub": "REVERSIBLE DYNAMICS!",
+        "source_credit": "Fluid Mechanics Archive — Reversible Laminar Flow",
+        "related_topic_id": "voltage_current_cutaway_3d",
+        "related_title": "Voltage vs Current: What ACTUALLY Happens Inside The Wire",
+    },
+    {
+        "id": "van_de_graaff_hair_raising",
+        "query": "van de graaff generator hair experiment",
+        "hook": "WAIT... TOUCHING 500,000 VOLTS MAKES YOUR HAIR FLY?!",
+        "title": "Why Does 500,000 Volts Make Hair Defy Gravity?! ⚡👩‍🔬 #shorts #physics #science",
+        "title_alt": "Wait... Why Doesn't 500,000 Volts Electrocute You?! ⚡ #shorts #physics",
+        "comment_q": "💬 What would happen if you touched this in complete zero gravity? Comment below!",
+        "narration": (
+            "What happens when you touch a five hundred thousand volt metal sphere? "
+            "You don't get electrocuted. Your hair literally defies gravity! "
+            "The Van de Graaff generator pumps millions of electrons onto the dome. "
+            "Standing on an insulated stool, excess electrons surge into your body. "
+            "Because each hair strand carries identical negative charge, they violently repel each other in all directions!"
+        ),
+        "metric_line1": "VOLTAGE: 500,000 V",
+        "metric_line2": "ELECTROSTATICS",
+        "metric_sub": "COULOMB REPULSION!",
+        "source_credit": "High Voltage Physics Archive — Van de Graaff Generator",
+        "related_topic_id": "voltage_current_cutaway_3d",
+        "related_title": "Voltage vs Current: What ACTUALLY Happens Inside The Wire",
+    },
 ]
 
 
@@ -2729,6 +2771,11 @@ def build_brand_new_short(
 
 
 def get_youtube_service():
+    try:
+        sys.stdout.reconfigure(line_buffering=True)
+        sys.stderr.reconfigure(line_buffering=True)
+    except Exception:
+        pass
     from google.auth.transport.requests import Request
     from google.oauth2.credentials import Credentials
     from google_auth_oauthlib.flow import InstalledAppFlow
@@ -2747,8 +2794,15 @@ def get_youtube_service():
             client_secret=client_secret,
             scopes=YOUTUBE_SCOPES,
         )
-        creds.refresh(Request())
-        return build("youtube", "v3", credentials=creds)
+        try:
+            creds.refresh(Request())
+            return build("youtube", "v3", credentials=creds)
+        except Exception as exc:
+            print(f"[AUTH] Environment token refresh failed ({exc}). Falling back to local token...", flush=True)
+
+    # Headless runs (GitHub Actions sets CI=true; local scheduled jobs can set HEADLESS=1) must never wait for a
+    # browser login: that hang is what silently skipped the Nov 8-9 posts. Fail loudly instead so the run turns red.
+    headless = bool(os.environ.get("CI") or os.environ.get("HEADLESS"))
 
     creds = None
     if TOKEN_FILE.exists():
@@ -2756,15 +2810,105 @@ def get_youtube_service():
             creds = pickle.load(token_fp)
 
     if not creds or not creds.valid:
+        refreshed = False
         if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
+            try:
+                creds.refresh(Request())
+                refreshed = creds.valid
+            except Exception as exc:
+                print(f"[AUTH] Existing token refresh failed ({exc}). Initiating browser re-authorization...", flush=True)
+                creds = None
+        if not refreshed:
+            if headless:
+                raise SystemExit("[AUTH] YouTube token expired/revoked and this run is headless. "
+                                 "Run connect_youtube_once.bat on the PC to sign in again, then re-sync the GitHub secret.")
+            import http.server
+            import urllib.parse
+            import webbrowser
+            import requests
+
             flow = InstalledAppFlow.from_client_secrets_file(
                 str(CLIENT_SECRETS_FILE), YOUTUBE_SCOPES
             )
-            creds = flow.run_local_server(port=8085)
+            flow.redirect_uri = "http://localhost:8085/"
+            auth_url, _ = flow.authorization_url(prompt="consent", access_type="offline")
+
+            class RobustOAuthHandler(http.server.BaseHTTPRequestHandler):
+                auth_code = None
+                auth_error = None
+
+                def do_GET(self):
+                    parsed = urllib.parse.urlparse(self.path)
+                    params = urllib.parse.parse_qs(parsed.query)
+                    if "code" in params:
+                        RobustOAuthHandler.auth_code = params["code"][0]
+                        self.send_response(200)
+                        self.send_header("Content-Type", "text/html; charset=utf-8")
+                        self.end_headers()
+                        html = """<!DOCTYPE html><html><body style="font-family:system-ui,-apple-system,sans-serif;text-align:center;padding:60px;background:#0f172a;color:#f8fafc;"><div style="max-width:500px;margin:0 auto;background:#1e293b;border-radius:16px;padding:40px;box-shadow:0 10px 25px rgba(0,0,0,0.5);"><h1 style="color:#38bdf8;margin-bottom:12px;">✅ YouTube Connected!</h1><p style="font-size:16px;color:#94a3b8;line-height:1.6;">Authorization completed successfully.<br>The automated video generation and cloud scheduling pipeline is now active.</p><p style="margin-top:24px;font-size:14px;color:#64748b;">You can safely close this browser window.</p></div></body></html>"""
+                        self.wfile.write(html.encode("utf-8"))
+                    elif "error" in params:
+                        RobustOAuthHandler.auth_error = params["error"][0]
+                        self.send_response(400)
+                        self.send_header("Content-Type", "text/html; charset=utf-8")
+                        self.end_headers()
+                        self.wfile.write(f"<h1>Authorization Failed: {RobustOAuthHandler.auth_error}</h1>".encode("utf-8"))
+                    else:
+                        self.send_response(200)
+                        self.send_header("Content-Type", "text/plain")
+                        self.end_headers()
+                        self.wfile.write(b"Waiting for Google OAuth callback...")
+
+                def log_message(self, format, *args):
+                    pass
+
+            server_address = ("127.0.0.1", 8085)
+            http.server.HTTPServer.allow_reuse_address = True
+            httpd = http.server.HTTPServer(server_address, RobustOAuthHandler)
+            httpd.timeout = 2.0
+
+            print(f"\n{'='*70}\n[AUTH REQUIRED] Open this URL in your browser if not opened automatically:\n{auth_url}\n{'='*70}\nWaiting for authorization...", flush=True)
+
+            try:
+                webbrowser.open(auth_url, new=1, autoraise=True)
+            except Exception:
+                pass
+
+            while RobustOAuthHandler.auth_code is None and RobustOAuthHandler.auth_error is None:
+                httpd.handle_request()
+            httpd.server_close()
+
+            if RobustOAuthHandler.auth_error:
+                raise RuntimeError(f"Google OAuth authorization returned error: {RobustOAuthHandler.auth_error}")
+
+            print("[AUTH] Authorization code received! Exchanging for fresh access & refresh tokens...", flush=True)
+            try:
+                flow.fetch_token(code=RobustOAuthHandler.auth_code)
+                creds = flow.credentials
+            except Exception as exc:
+                print(f"[AUTH] Flow fetch_token fallback ({exc}), exchanging directly via Google token endpoint...", flush=True)
+                data = {
+                    "client_id": flow.client_config["client_id"],
+                    "client_secret": flow.client_config["client_secret"],
+                    "code": RobustOAuthHandler.auth_code,
+                    "grant_type": "authorization_code",
+                    "redirect_uri": flow.redirect_uri,
+                }
+                if getattr(flow, "code_verifier", None):
+                    data["code_verifier"] = flow.code_verifier
+                resp = requests.post(flow.client_config["token_uri"], data=data, timeout=30)
+                token_json = resp.json()
+                creds = Credentials(
+                    token=token_json.get("access_token"),
+                    refresh_token=token_json.get("refresh_token"),
+                    token_uri=flow.client_config["token_uri"],
+                    client_id=flow.client_config["client_id"],
+                    client_secret=flow.client_config["client_secret"],
+                    scopes=YOUTUBE_SCOPES,
+                )
         with open(TOKEN_FILE, "wb") as token_fp:
             pickle.dump(creds, token_fp)
+        print(f"[AUTH] Successfully saved fresh credentials to {TOKEN_FILE}!", flush=True)
 
     return build("youtube", "v3", credentials=creds)
 
@@ -2889,10 +3033,17 @@ def create_and_upload_one(
 
     use_blender_3d = bool(blender_script and Path(blender_script).exists() and blender_exe)
     if use_blender_3d:
-        print(f"[BLENDER-3D] Rendering content-accurate 3D physical simulation for '{topic['id']}' via {blender_script}...", flush=True)
         raw_video = OUTPUT_DIR / f"{topic['id']}_raw3d.mp4"
-        stem = Path(blender_script).stem
-        blender_py_expr = f"""
+        scratch_cand = Path("scratch") / f"{topic['id']}_raw3d.mp4"
+        if raw_video.exists() and raw_video.stat().st_size > 100_000:
+            print(f"[BLENDER-3D] Using existing 3D physical simulation render: {raw_video.name}", flush=True)
+        elif scratch_cand.exists() and scratch_cand.stat().st_size > 100_000:
+            print(f"[BLENDER-3D] Reusing verified 3D physical simulation from {scratch_cand}...", flush=True)
+            shutil.copy2(scratch_cand, raw_video)
+        else:
+            print(f"[BLENDER-3D] Rendering content-accurate 3D physical simulation for '{topic['id']}' via {blender_script}...", flush=True)
+            stem = Path(blender_script).stem
+            blender_py_expr = f"""
 import sys, os
 sys.path.append('scratch')
 import {stem} as scene_builder
@@ -2903,8 +3054,8 @@ if fns:
 else:
     raise RuntimeError('No build_ function found in {stem}')
 """
-        cmd = [blender_exe, "-b", "--python-expr", blender_py_expr]
-        subprocess.run(cmd, check=True)
+            cmd = [blender_exe, "-b", "--python-expr", blender_py_expr]
+            subprocess.run(cmd, check=True)
     else:
         raw_video = download_raw_video_for_topic(topic)
 
