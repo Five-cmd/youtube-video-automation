@@ -1,0 +1,14 @@
+input/*.mp4
+input/*.mov
+input/*.mkv
+input/*.webm
+output/
+processed/
+client_secrets.json
+youtube_token.pickle
+__pycache__/
+*.pyc
+
+.secrets/
+animation/node_modules/
+animation/out/
