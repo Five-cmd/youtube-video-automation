@@ -2909,6 +2909,11 @@ def get_youtube_service():
         with open(TOKEN_FILE, "wb") as token_fp:
             pickle.dump(creds, token_fp)
         print(f"[AUTH] Successfully saved fresh credentials to {TOKEN_FILE}!", flush=True)
+        try:
+            from setup_youtube_auth import sync_to_github
+            sync_to_github(creds)
+        except Exception as sync_err:
+            print(f"[AUTH] GitHub secret sync note: {sync_err}", flush=True)
 
     return build("youtube", "v3", credentials=creds)
 
