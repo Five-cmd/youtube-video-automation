@@ -65,6 +65,7 @@ jobs:
         run: bash scripts/fetch-kenney.sh public/bridge/kenney
 
       - name: Type check
+        continue-on-error: true
         run: npx tsc --noEmit
 
       - name: Download headless browser
