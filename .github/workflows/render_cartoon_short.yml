@@ -1,23 +1,25 @@
 name: Cartoon 3D Short - Cloud Render (no upload)
 
-# Renders the three.js + Remotion cartoon shorts on GitHub's machines so the user's PC does no rendering.
+# Renders the three.js + Remotion cartoon physics shorts on GitHub's machines so the user's PC does zero rendering.
 # This workflow NEVER uploads to YouTube: results are downloadable artifacts for local review (zero API quota).
 on:
   workflow_dispatch:
     inputs:
       comp:
-        description: "Remotion composition id"
-        default: "BridgeShort"
+        description: "Remotion composition id (or ALL_4 for all 4 physics shorts)"
+        default: "ALL_4"
         required: true
+        type: choice
+        options: [ALL_4, BridgeShort, CavendishShort, MagdeburgShort, FaradayShort]
       mode:
-        description: "stills (fast look check) or video (full render)"
+        description: "stills (fast look check + audio master) or video (full render + audio + QA)"
         default: "stills"
         required: true
         type: choice
         options: [stills, video]
       frames:
         description: "Frames for stills mode (comma separated)"
-        default: "60,200,500,900,1200,1500,1900"
+        default: "60,500,1010,1500"
       scale:
         description: "Output scale (0.5 stills, 1 = 1080x1920, 1.3333 = 2K final)"
         default: "0.5"
@@ -43,53 +45,72 @@ jobs:
         with:
           node-version: "20"
 
-      - name: System libraries for headless Chrome
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: System libraries for headless Chrome & FFmpeg
         run: |
           sudo apt-get update
           sudo apt-get install -y ffmpeg libnss3 libdbus-1-3 libatk1.0-0 libgbm-dev libasound2 libxrandr2 \
             libxkbcommon-dev libxfixes3 libxcomposite1 libxdamage1 libatk-bridge2.0-0 libpango-1.0-0 libcairo2 libcups2
 
-      - name: Install packages
-        run: npm install --no-audit --no-fund
+      - name: Install Node & Python packages
+        run: |
+          npm install --no-audit --no-fund
+          pip install --quiet numpy scipy pillow edge-tts imageio-ffmpeg
 
       - name: Fetch Kenney CC0 props (optional; the world builds without them)
         continue-on-error: true
         run: bash scripts/fetch-kenney.sh public/bridge/kenney
 
-      - name: Type check (report only)
-        continue-on-error: true
+      - name: Type check
         run: npx tsc --noEmit
 
       - name: Download headless browser
         run: npx remotion browser ensure
 
-      - name: Render stills
-        if: inputs.mode == 'stills'
-        run: node scripts/cloud-stills.mjs "${{ inputs.comp }}" out/stills/x_ "${{ inputs.frames }}" "${{ inputs.scale }}"
-
-      - name: Render video (silent picture track)
-        if: inputs.mode == 'video'
+      - name: Synthesize -15 LUFS Audio Master (Voice + March Score + SFX + Speech Ducking)
         run: |
-          npx remotion render src/index.ts "${{ inputs.comp }}" out/picture.mp4 \
-            --codec h264 --crf 16 --scale "${{ inputs.scale }}" --gl=swangle --concurrency=4 --timeout=600000
-          if [ -f "out/${{ inputs.comp }}/mix.wav" ]; then
-            ffmpeg -y -i out/picture.mp4 -i "out/${{ inputs.comp }}/mix.wav" -map 0:v:0 -map 1:a:0 -c:v copy -c:a aac -b:a 256k -shortest out/final.mp4
+          if [ "${{ inputs.comp }}" = "ALL_4" ]; then
+            for c in BridgeShort CavendishShort MagdeburgShort FaradayShort; do
+              python3 audio/make_short_audio.py "$c"
+            done
           else
-            cp out/picture.mp4 out/final.mp4
+            python3 audio/make_short_audio.py "${{ inputs.comp }}"
           fi
 
-      - name: QA every frame (black / white / frozen / pop + loudness)
+      - name: Render stills
+        if: inputs.mode == 'stills'
+        run: |
+          if [ "${{ inputs.comp }}" = "ALL_4" ]; then
+            for c in BridgeShort CavendishShort MagdeburgShort FaradayShort; do
+              node scripts/cloud-stills.mjs "$c" "out/stills/${c}_" "${{ inputs.frames }}" "${{ inputs.scale }}"
+            done
+          else
+            node scripts/cloud-stills.mjs "${{ inputs.comp }}" "out/stills/${{ inputs.comp }}_" "${{ inputs.frames }}" "${{ inputs.scale }}"
+          fi
+
+      - name: Render video & mux -15 LUFS audio
+        if: inputs.mode == 'video'
+        run: |
+          TARGET="${{ inputs.comp }}"
+          if [ "$TARGET" = "ALL_4" ]; then TARGET="CavendishShort"; fi
+          npx remotion render src/index.ts "$TARGET" out/picture.mp4 \
+            --codec h264 --crf 16 --scale "${{ inputs.scale }}" --gl=swangle --concurrency=4 --timeout=600000
+          ffmpeg -y -i out/picture.mp4 -i "out/${TARGET}/mix.wav" -map 0:v:0 -map 1:a:0 -c:v copy -c:a aac -b:a 256k -shortest out/final.mp4
+
+      - name: QA every frame (black / white / frozen / pop + EBU R128 loudness)
         if: inputs.mode == 'video'
         continue-on-error: true
-        run: |
-          pip install --quiet numpy pillow
-          python3 scripts/short_qa.py out/final.mp4 out/qa
+        run: python3 scripts/short_qa.py out/final.mp4 out/qa
 
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.comp }}-${{ inputs.mode }}-${{ github.run_number }}
           path: |
             animation/out/stills/
+            animation/out/*/mix.wav
             animation/out/final.mp4
             animation/out/qa/
           if-no-files-found: warn
