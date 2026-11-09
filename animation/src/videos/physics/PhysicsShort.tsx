@@ -130,8 +130,8 @@ class EpisodeRig {
     const mRed = twoTone(new THREE.MeshLambertMaterial({ color: "#c93b32" }));
     const mPaper = twoTone(new THREE.MeshLambertMaterial({ color: "#f3efe6" }));
 
-    this.ropeL = new Strand(12, 0.045, mWood);
-    this.ropeR = new Strand(12, 0.045, mWood);
+    this.ropeL = new Strand(12, 0.045, 0.045, mWood);
+    this.ropeR = new Strand(12, 0.045, 0.045, mWood);
 
     if (ep === "cavendish") {
       // Cutaway garden shed frame + wooden torsion box + telescope in wall
