@@ -2822,98 +2822,28 @@ def get_youtube_service():
             if headless:
                 raise SystemExit("[AUTH] YouTube token expired/revoked and this run is headless. "
                                  "Run connect_youtube_once.bat on the PC to sign in again, then re-sync the GitHub secret.")
-            import http.server
-            import urllib.parse
-            import webbrowser
-            import requests
+            success_html = """<!DOCTYPE html><html><body style="font-family:system-ui,-apple-system,sans-serif;text-align:center;padding:60px;background:#0f172a;color:#f8fafc;"><div style="max-width:500px;margin:0 auto;background:#1e293b;border-radius:16px;padding:40px;box-shadow:0 10px 25px rgba(0,0,0,0.5);"><h1 style="color:#38bdf8;margin-bottom:12px;">✅ YouTube Connected!</h1><p style="font-size:16px;color:#94a3b8;line-height:1.6;">Authorization completed successfully.<br>The automated video generation and cloud scheduling pipeline is now active.</p><p style="margin-top:24px;font-size:14px;color:#64748b;">You can safely close this browser window.</p></div></body></html>"""
 
             flow = InstalledAppFlow.from_client_secrets_file(
                 str(CLIENT_SECRETS_FILE), YOUTUBE_SCOPES
             )
-            flow.redirect_uri = "http://localhost:8085/"
-            auth_url, _ = flow.authorization_url(prompt="consent", access_type="offline")
-
-            class RobustOAuthHandler(http.server.BaseHTTPRequestHandler):
-                auth_code = None
-                auth_error = None
-
-                def do_GET(self):
-                    parsed = urllib.parse.urlparse(self.path)
-                    params = urllib.parse.parse_qs(parsed.query)
-                    if "code" in params:
-                        RobustOAuthHandler.auth_code = params["code"][0]
-                        self.send_response(200)
-                        self.send_header("Content-Type", "text/html; charset=utf-8")
-                        self.end_headers()
-                        html = """<!DOCTYPE html><html><body style="font-family:system-ui,-apple-system,sans-serif;text-align:center;padding:60px;background:#0f172a;color:#f8fafc;"><div style="max-width:500px;margin:0 auto;background:#1e293b;border-radius:16px;padding:40px;box-shadow:0 10px 25px rgba(0,0,0,0.5);"><h1 style="color:#38bdf8;margin-bottom:12px;">✅ YouTube Connected!</h1><p style="font-size:16px;color:#94a3b8;line-height:1.6;">Authorization completed successfully.<br>The automated video generation and cloud scheduling pipeline is now active.</p><p style="margin-top:24px;font-size:14px;color:#64748b;">You can safely close this browser window.</p></div></body></html>"""
-                        self.wfile.write(html.encode("utf-8"))
-                    elif "error" in params:
-                        RobustOAuthHandler.auth_error = params["error"][0]
-                        self.send_response(400)
-                        self.send_header("Content-Type", "text/html; charset=utf-8")
-                        self.end_headers()
-                        self.wfile.write(f"<h1>Authorization Failed: {RobustOAuthHandler.auth_error}</h1>".encode("utf-8"))
-                    else:
-                        self.send_response(200)
-                        self.send_header("Content-Type", "text/plain")
-                        self.end_headers()
-                        self.wfile.write(b"Waiting for Google OAuth callback...")
-
-                def log_message(self, format, *args):
-                    pass
-
-            server_address = ("127.0.0.1", 8085)
-            http.server.HTTPServer.allow_reuse_address = True
-            httpd = http.server.HTTPServer(server_address, RobustOAuthHandler)
-            httpd.timeout = 2.0
-
-            print(f"\n{'='*70}\n[AUTH REQUIRED] Open this URL in your browser if not opened automatically:\n{auth_url}\n{'='*70}\nWaiting for authorization...", flush=True)
-
+            print("\n" + "="*70 + "\n[AUTH REQUIRED] Opening browser for Google / YouTube login...\n" + "="*70, flush=True)
+            creds = flow.run_local_server(
+                port=8085,
+                prompt="consent",
+                access_type="offline",
+                success_message=success_html,
+            )
+            if not creds or not getattr(creds, "refresh_token", None):
+                raise RuntimeError("Failed to obtain valid YouTube credentials with refresh token.")
+            with open(TOKEN_FILE, "wb") as token_fp:
+                pickle.dump(creds, token_fp)
+            print(f"[AUTH] Successfully saved fresh credentials to {TOKEN_FILE}!", flush=True)
             try:
-                webbrowser.open(auth_url, new=1, autoraise=True)
-            except Exception:
-                pass
-
-            while RobustOAuthHandler.auth_code is None and RobustOAuthHandler.auth_error is None:
-                httpd.handle_request()
-            httpd.server_close()
-
-            if RobustOAuthHandler.auth_error:
-                raise RuntimeError(f"Google OAuth authorization returned error: {RobustOAuthHandler.auth_error}")
-
-            print("[AUTH] Authorization code received! Exchanging for fresh access & refresh tokens...", flush=True)
-            try:
-                flow.fetch_token(code=RobustOAuthHandler.auth_code)
-                creds = flow.credentials
-            except Exception as exc:
-                print(f"[AUTH] Flow fetch_token fallback ({exc}), exchanging directly via Google token endpoint...", flush=True)
-                data = {
-                    "client_id": flow.client_config["client_id"],
-                    "client_secret": flow.client_config["client_secret"],
-                    "code": RobustOAuthHandler.auth_code,
-                    "grant_type": "authorization_code",
-                    "redirect_uri": flow.redirect_uri,
-                }
-                if getattr(flow, "code_verifier", None):
-                    data["code_verifier"] = flow.code_verifier
-                resp = requests.post(flow.client_config["token_uri"], data=data, timeout=30)
-                token_json = resp.json()
-                creds = Credentials(
-                    token=token_json.get("access_token"),
-                    refresh_token=token_json.get("refresh_token"),
-                    token_uri=flow.client_config["token_uri"],
-                    client_id=flow.client_config["client_id"],
-                    client_secret=flow.client_config["client_secret"],
-                    scopes=YOUTUBE_SCOPES,
-                )
-        with open(TOKEN_FILE, "wb") as token_fp:
-            pickle.dump(creds, token_fp)
-        print(f"[AUTH] Successfully saved fresh credentials to {TOKEN_FILE}!", flush=True)
-        try:
-            from setup_youtube_auth import sync_to_github
-            sync_to_github(creds)
-        except Exception as sync_err:
-            print(f"[AUTH] GitHub secret sync note: {sync_err}", flush=True)
+                from setup_youtube_auth import sync_to_github
+                sync_to_github(creds)
+            except Exception as sync_err:
+                print(f"[AUTH] GitHub secret sync note: {sync_err}", flush=True)
 
     return build("youtube", "v3", credentials=creds)
 
@@ -3072,25 +3002,28 @@ else:
     endcard_overlay = OUTPUT_DIR / f"{topic['id']}_endcard.png"
     edited_video = OUTPUT_DIR / f"{topic['id']}_short.mp4"
 
-    vo_duration = generate_english_voiceover_and_srt(
-        topic, mp3_path, srt_path, voice_rate=params.get("voice_rate", "+18%")
-    )
-    generate_science_bgm_wav(bgm_path, max(vo_duration + 4.0, 22.0))
-    if use_blender_3d:
-        shutil.copy2(raw_video, climax_video)
+    if edited_video.exists() and edited_video.stat().st_size > 100_000 and srt_path.exists():
+        print(f"[REUSE] Using existing newly-rendered Short: {edited_video.name}", flush=True)
     else:
-        prepare_climax_experiment_video(raw_video, topic, vo_duration, climax_video)
-    create_overlays_png(topic, main_overlay, endcard_overlay)
-    build_brand_new_short(
-        climax_video,
-        mp3_path,
-        bgm_path,
-        main_overlay,
-        endcard_overlay,
-        edited_video,
-        vo_duration,
-        max_clip_dur=float(params.get("max_clip_dur", 19.5)),
-    )
+        vo_duration = generate_english_voiceover_and_srt(
+            topic, mp3_path, srt_path, voice_rate=params.get("voice_rate", "+18%")
+        )
+        generate_science_bgm_wav(bgm_path, max(vo_duration + 4.0, 22.0))
+        if use_blender_3d:
+            shutil.copy2(raw_video, climax_video)
+        else:
+            prepare_climax_experiment_video(raw_video, topic, vo_duration, climax_video)
+        create_overlays_png(topic, main_overlay, endcard_overlay)
+        build_brand_new_short(
+            climax_video,
+            mp3_path,
+            bgm_path,
+            main_overlay,
+            endcard_overlay,
+            edited_video,
+            vo_duration,
+            max_clip_dur=float(params.get("max_clip_dur", 19.5)),
+        )
 
     vid_id, url = upload_to_youtube_api(
         edited_video, topic, srt_path=srt_path, publish_at_iso=publish_at_iso
