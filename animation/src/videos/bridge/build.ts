@@ -118,7 +118,7 @@ export class Batch {
 // ---------------- strands: box-section tube along a path, rebuilt in place ----------------
 // chain-link template (MAT pass): a stadium-shaped ring tube in link space (x along the chain, y in the ring plane,
 // z across), NS centre-line samples x NR tube sides, smooth normals (clean ink silhouettes, no facet creases)
-const LNS = 16, LNR = 6;
+const LNS = 8, LNR = 4;
 type LinkT = { p: Float32Array; n: Float32Array; idx: number[]; pitch: number };
 const linkTemplate = (h: number): LinkT => {
   const ow = h * 0.85, rb = ow * 0.14, ol = ow * 1.62, rc = ow / 2 - rb, hl = ol / 2 - rb - rc;
