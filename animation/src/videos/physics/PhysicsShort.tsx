@@ -40,35 +40,35 @@ const makeShots = (total: number, stage: V3, park: V3): EpShot[] => {
   const [sx, sy, sz] = stage, [px, py, pz] = park;
   return [
     // 1. Hook (0 - 130f, ends with 4-frame white flash)
-    { id: 1, a: 0, b: 130, light: "day", cInf: 12, pos0: [sx - 1.0, sy + 1.55, sz + 6.0], look0: [sx, sy + 1.35, sz], pos1: [sx - 0.5, sy + 1.45, sz + 4.4], look1: [sx, sy + 1.35, sz], fov: 40 },
+    { id: 1, a: 0, b: 130, light: "day", cInf: 10, pos0: [sx - 0.8, sy + 1.65, sz + 7.4], look0: [sx, sy + 1.35, sz], pos1: [sx - 0.4, sy + 1.5, sz + 5.8], look1: [sx, sy + 1.35, sz], fov: 42 },
     // 2. Setting wide town + riverfront establish (130 - 285f)
     { id: 2, a: 130, b: 285, light: "day", cInf: 0, pos0: [sx + 11.5, sy + 5.2, sz + 14.0], look0: [sx - 1.0, sy + 1.8, sz - 2.0], pos1: [sx + 7.5, sy + 3.4, sz + 10.2], look1: [sx, sy + 1.5, sz], fov: 42 },
     // 3. Apparatus close inspection (285 - 445f)
-    { id: 3, a: 285, b: 445, light: "day", cInf: 10, pos0: [sx + 2.2, sy + 1.65, sz + 4.8], look0: [sx, sy + 1.4, sz], pos1: [sx + 1.4, sy + 1.55, sz + 3.8], look1: [sx, sy + 1.4, sz], fov: 38 },
+    { id: 3, a: 285, b: 445, light: "day", cInf: 9, pos0: [sx + 1.8, sy + 1.65, sz + 6.4], look0: [sx, sy + 1.35, sz], pos1: [sx + 1.1, sy + 1.55, sz + 5.2], look1: [sx, sy + 1.35, sz], fov: 40 },
     // 4. Escalation beat 1: scale / giant masses / horses / generator (445 - 565f)
-    { id: 4, a: 445, b: 565, light: "day", cInf: 8, pos0: [sx - 1.4, sy + 1.6, sz + 6.8], look0: [sx, sy + 1.35, sz], pos1: [sx - 0.8, sy + 1.5, sz + 5.6], look1: [sx, sy + 1.35, sz], fov: 42, kickAt: 455 },
+    { id: 4, a: 445, b: 565, light: "day", cInf: 7, pos0: [sx - 0.9, sy + 1.65, sz + 8.2], look0: [sx, sy + 1.35, sz], pos1: [sx - 0.4, sy + 1.55, sz + 6.8], look1: [sx, sy + 1.35, sz], fov: 44, kickAt: 455 },
     // 5. Escalation beat 2: crowd reaction / mocking / doubt (565 - 690f)
-    { id: 5, a: 565, b: 690, light: "day", cInf: 10, pos0: [sx + 3.6, sy + 1.55, sz + 5.6], look0: [sx + 0.6, sy + 1.3, sz], pos1: [sx + 2.6, sy + 1.48, sz + 4.5], look1: [sx + 0.4, sy + 1.3, sz], fov: 40 },
+    { id: 5, a: 565, b: 690, light: "day", cInf: 9, pos0: [sx + 2.8, sy + 1.6, sz + 7.0], look0: [sx + 0.3, sy + 1.3, sz], pos1: [sx + 1.9, sy + 1.5, sz + 5.8], look1: [sx + 0.2, sy + 1.3, sz], fov: 42 },
     // 6. Escalation beat 3: rising tension (690 - 835f)
-    { id: 6, a: 690, b: 835, light: "day", cInf: 11, pos0: [sx - 1.8, sy + 1.75, sz + 5.8], look0: [sx, sy + 1.4, sz], pos1: [sx - 1.0, sy + 1.6, sz + 4.5], look1: [sx, sy + 1.4, sz], fov: 38, roll: 0.055 },
+    { id: 6, a: 690, b: 835, light: "day", cInf: 9, pos0: [sx - 1.5, sy + 1.75, sz + 7.2], look0: [sx, sy + 1.35, sz], pos1: [sx - 0.8, sy + 1.6, sz + 5.8], look1: [sx, sy + 1.35, sz], fov: 42, roll: 0.05 },
     // 7. Peak strain right before the snap (835 - 985f)
-    { id: 7, a: 835, b: 985, light: "day", cInf: 12, pos0: [sx + 0.7, sy + 1.4, sz + 4.8], look0: [sx, sy + 1.35, sz], pos1: [sx + 0.3, sy + 1.35, sz + 3.7], look1: [sx, sy + 1.35, sz], fov: 38, roll: -0.06 },
+    { id: 7, a: 835, b: 985, light: "day", cInf: 10, pos0: [sx + 0.6, sy + 1.45, sz + 6.2], look0: [sx, sy + 1.35, sz], pos1: [sx + 0.2, sy + 1.4, sz + 5.0], look1: [sx, sy + 1.35, sz], fov: 40, roll: -0.055 },
     // 8. THE SNAP: physical climax / bolt / valve / deflection (985 - 1135f)
-    { id: 8, a: 985, b: 1135, light: "day", cInf: 10, pos0: [sx - 0.4, sy + 1.55, sz + 5.6], look0: [sx, sy + 1.35, sz], pos1: [sx + 0.4, sy + 1.45, sz + 4.4], look1: [sx, sy + 1.35, sz], fov: 40, kickAt: 1005 },
+    { id: 8, a: 985, b: 1135, light: "day", cInf: 8, pos0: [sx - 0.3, sy + 1.6, sz + 7.2], look0: [sx, sy + 1.35, sz], pos1: [sx + 0.3, sy + 1.5, sz + 5.8], look1: [sx, sy + 1.35, sz], fov: 42, kickAt: 1005 },
     // 9. Deadpan line 1: "Luckily..." (1135 - 1220f)
-    { id: 9, a: 1135, b: 1220, light: "day", cInf: 12, pos0: [sx - 1.6, sy + 1.45, sz + 4.4], look0: [sx - 0.3, sy + 1.3, sz], pos1: [sx - 1.2, sy + 1.4, sz + 3.8], look1: [sx - 0.3, sy + 1.3, sz], fov: 38 },
+    { id: 9, a: 1135, b: 1220, light: "day", cInf: 10, pos0: [sx - 1.2, sy + 1.5, sz + 5.8], look0: [sx - 0.2, sy + 1.3, sz], pos1: [sx - 0.8, sy + 1.45, sz + 5.0], look1: [sx - 0.2, sy + 1.3, sz], fov: 40 },
     // 10. Deadpan line 2: "Unluckily..." (1220 - 1310f)
-    { id: 10, a: 1220, b: 1310, light: "day", cInf: 10, pos0: [sx + 2.4, sy + 1.5, sz + 5.0], look0: [sx + 0.4, sy + 1.25, sz], pos1: [sx + 1.8, sy + 1.45, sz + 4.2], look1: [sx + 0.3, sy + 1.25, sz], fov: 38 },
+    { id: 10, a: 1220, b: 1310, light: "day", cInf: 9, pos0: [sx + 1.8, sy + 1.55, sz + 6.2], look0: [sx + 0.2, sy + 1.25, sz], pos1: [sx + 1.3, sy + 1.48, sz + 5.2], look1: [sx + 0.2, sy + 1.25, sz], fov: 40 },
     // 11. Pivot "You see," in Golden Hour light (1310 - 1425f) - looking +Z across the sunny park toward the town!
-    { id: 11, a: 1310, b: 1425, light: "golden", cInf: 7, pos0: [px - 1.8, py + 1.75, pz - 7.4], look0: [px, py + 1.45, pz], pos1: [px - 1.0, py + 1.6, pz - 6.0], look1: [px, py + 1.45, pz], fov: 40 },
+    { id: 11, a: 1310, b: 1425, light: "golden", cInf: 6, pos0: [px - 1.4, py + 1.75, pz - 8.2], look0: [px, py + 1.4, pz], pos1: [px - 0.8, py + 1.6, pz - 6.8], look1: [px, py + 1.4, pz], fov: 42 },
     // 12. Everyday Analogy demonstration in the Park (1425 - 1640f) - looking +Z like BridgeShort Shot 12!
-    { id: 12, a: 1425, b: 1640, light: "golden", cInf: 8, pos0: [px + 0.9, py + 1.55, pz - 5.8], look0: [px, py + 1.35, pz], pos1: [px + 0.35, py + 1.45, pz - 4.7], look1: [px, py + 1.35, pz], fov: 38 },
+    { id: 12, a: 1425, b: 1640, light: "golden", cInf: 7, pos0: [px + 0.6, py + 1.58, pz - 7.0], look0: [px, py + 1.35, pz], pos1: [px + 0.2, py + 1.48, pz - 5.8], look1: [px, py + 1.35, pz], fov: 40 },
     // 13. Connecting analogy back to the apparatus in Golden Light (1640 - 1755f)
-    { id: 13, a: 1640, b: 1755, light: "golden", cInf: 9, pos0: [sx - 2.2, sy + 1.7, sz + 5.6], look0: [sx, sy + 1.4, sz], pos1: [sx - 1.3, sy + 1.55, sz + 4.4], look1: [sx, sy + 1.4, sz], fov: 40 },
+    { id: 13, a: 1640, b: 1755, light: "golden", cInf: 8, pos0: [sx - 1.8, sy + 1.7, sz + 6.8], look0: [sx, sy + 1.38, sz], pos1: [sx - 1.0, sy + 1.55, sz + 5.6], look1: [sx, sy + 1.38, sz], fov: 42 },
     // 14. Scientific Consequence (1755 - 1880f)
-    { id: 14, a: 1755, b: 1880, light: "day", cInf: 9, pos0: [sx + 2.0, sy + 1.55, sz + 5.2], look0: [sx, sy + 1.35, sz], pos1: [sx + 1.1, sy + 1.5, sz + 4.2], look1: [sx, sy + 1.35, sz], fov: 38 },
+    { id: 14, a: 1755, b: 1880, light: "day", cInf: 8, pos0: [sx + 1.6, sy + 1.58, sz + 6.4], look0: [sx, sy + 1.35, sz], pos1: [sx + 0.9, sy + 1.5, sz + 5.4], look1: [sx, sy + 1.35, sz], fov: 40 },
     // 15. Callback Twist payoff (1880 - total)
-    { id: 15, a: 1880, b: total, light: "day", cInf: 6, pos0: [sx - 0.5, sy + 1.6, sz + 5.4], look0: [sx, sy + 1.3, sz], pos1: [sx + 0.4, sy + 2.4, sz + 7.8], look1: [sx, sy + 1.3, sz], fov: 42 },
+    { id: 15, a: 1880, b: total, light: "day", cInf: 5, pos0: [sx - 0.4, sy + 1.65, sz + 6.4], look0: [sx, sy + 1.3, sz], pos1: [sx + 0.4, sy + 2.5, sz + 8.8], look1: [sx, sy + 1.3, sz], fov: 44 },
   ];
 };
 
@@ -157,36 +157,36 @@ class EpisodeRig {
       beamMid.position.set(0, 3.05, 0);
       this.group.add(beamF, beamB, beamL, beamR, beamMid);
 
-      // Torsion wire + 6-ft (1.8 m) rod + two small red lead balls
+      // Torsion wire + 6-ft (1.8 m) rod + two small red lead balls (offset inward so both red & lead spheres show clearly!)
       const wire = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 1.5, 8), mBrass);
       wire.position.set(0, 2.25, 0);
-      const rod = new THREE.Mesh(new THREE.BoxGeometry(1.95, 0.075, 0.075), mWood);
+      const rod = new THREE.Mesh(new THREE.BoxGeometry(1.12, 0.065, 0.065), mWood);
       rod.position.set(0, 1.5, 0);
       this.torsionPivot.add(wire, rod);
       for (const s of [-1, 1]) {
-        const sb = new THREE.Mesh(new THREE.SphereGeometry(0.16, 20, 16), mRed);
-        sb.position.set(s * 0.94, 1.5, 0);
+        const sb = new THREE.Mesh(new THREE.SphereGeometry(0.14, 20, 16), mRed);
+        sb.position.set(s * 0.54, 1.5, 0);
         this.torsionPivot.add(sb);
       }
       // Two giant 348-lb lead spheres on rotatable suspension struts
-      const bigBar = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.12, 0.12), mIron);
+      const bigBar = new THREE.Mesh(new THREE.BoxGeometry(1.85, 0.11, 0.11), mIron);
       bigBar.position.set(0, 2.82, 0);
       this.bigBeamPivot.add(bigBar);
       for (const s of [-1, 1]) {
         const strut = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.35, 10), mIron);
-        strut.position.set(s * 0.94, 2.15, s * 0.34);
-        const bigBall = new THREE.Mesh(new THREE.SphereGeometry(0.46, 24, 18), mLead);
-        bigBall.position.set(s * 0.94, 1.45, s * 0.34);
+        strut.position.set(s * 0.86, 2.15, s * 0.28);
+        const bigBall = new THREE.Mesh(new THREE.SphereGeometry(0.42, 24, 18), mLead);
+        bigBall.position.set(s * 0.86, 1.45, s * 0.28);
         this.bigBeamPivot.add(strut, bigBall);
       }
       this.group.add(this.torsionPivot, this.bigBeamPivot);
 
       // Brass telescope outside the left pavilion post + wooden tripod
-      const scope = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.085, 0.95, 14), mBrass);
+      const scope = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.085, 0.85, 14), mBrass);
       scope.rotation.z = Math.PI / 2;
-      scope.position.set(-2.25, 1.48, 0.35);
-      const tripod = new THREE.Mesh(new THREE.ConeGeometry(0.32, 1.45, 6), mWood);
-      tripod.position.set(-2.35, 0.72, 0.35);
+      scope.position.set(-1.55, 1.48, 0.35);
+      const tripod = new THREE.Mesh(new THREE.ConeGeometry(0.3, 1.45, 6), mWood);
+      tripod.position.set(-1.65, 0.72, 0.35);
       this.group.add(scope, tripod);
 
       // Compact park easel board for the everyday analogy (never blocks the sunny park or characters!)
@@ -221,6 +221,13 @@ class EpisodeRig {
       hGeoR.rotateZ(-Math.PI / 2);
       this.hemiL = new THREE.Mesh(hGeoL, mCopper);
       this.hemiR = new THREE.Mesh(hGeoR, mCopper);
+      // Solid machined copper end-caps so when the hemispheres pop apart in Shot 8, no hollow interior wireframe shows
+      const capL = new THREE.Mesh(new THREE.CircleGeometry(0.54, 24), mCopper);
+      capL.rotation.y = Math.PI / 2;
+      this.hemiL.add(capL);
+      const capR = new THREE.Mesh(new THREE.CircleGeometry(0.54, 24), mCopper);
+      capR.rotation.y = -Math.PI / 2;
+      this.hemiR.add(capR);
       const ringL = new THREE.Mesh(new THREE.TorusGeometry(0.12, 0.035, 10, 18), mBrass);
       ringL.position.set(-0.6, 0, 0);
       this.hemiL.add(ringL);
@@ -251,55 +258,55 @@ class EpisodeRig {
 
     if (ep === "faraday") {
       // 12-foot conducting cage on 4 glass insulator pillars + copper mesh bars
-      for (const [x, z] of [[-1.4, -1.2], [1.4, -1.2], [-1.4, 1.2], [1.4, 1.2]]) {
+      for (const [x, z] of [[-1.25, -1.1], [1.25, -1.1], [-1.25, 1.1], [1.25, 1.1]]) {
         const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.13, 0.42, 12), mGlass);
         leg.position.set(x, 0.21, z);
         this.group.add(leg);
       }
-      const floor = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.12, 2.6), mWood);
+      const floor = new THREE.Mesh(new THREE.BoxGeometry(2.7, 0.12, 2.4), mWood);
       floor.position.set(0, 0.46, 0);
       this.group.add(floor);
       // Cage frame bars (copper + iron)
-      for (const [x, z] of [[-1.42, -1.22], [1.42, -1.22], [-1.42, 1.22], [1.42, 1.22]]) {
-        const bar = new THREE.Mesh(new THREE.BoxGeometry(0.095, 2.75, 0.095), mCopper);
+      for (const [x, z] of [[-1.28, -1.12], [1.28, -1.12], [-1.28, 1.12], [1.28, 1.12]]) {
+        const bar = new THREE.Mesh(new THREE.BoxGeometry(0.09, 2.75, 0.09), mCopper);
         bar.position.set(x, 1.85, z);
         this.group.add(bar);
       }
       for (const y of [0.52, 1.4, 2.28, 3.18]) {
-        const topF = new THREE.Mesh(new THREE.BoxGeometry(2.94, 0.065, 0.065), mCopper);
-        topF.position.set(0, y, 1.22);
-        const topB = new THREE.Mesh(new THREE.BoxGeometry(2.94, 0.065, 0.065), mCopper);
-        topB.position.set(0, y, -1.22);
-        const sideL = new THREE.Mesh(new THREE.BoxGeometry(0.065, 0.065, 2.54), mCopper);
-        sideL.position.set(-1.42, y, 0);
-        const sideR = new THREE.Mesh(new THREE.BoxGeometry(0.065, 0.065, 2.54), mCopper);
-        sideR.position.set(1.42, y, 0);
+        const topF = new THREE.Mesh(new THREE.BoxGeometry(2.64, 0.065, 0.065), mCopper);
+        topF.position.set(0, y, 1.12);
+        const topB = new THREE.Mesh(new THREE.BoxGeometry(2.64, 0.065, 0.065), mCopper);
+        topB.position.set(0, y, -1.12);
+        const sideL = new THREE.Mesh(new THREE.BoxGeometry(0.065, 0.065, 2.32), mCopper);
+        sideL.position.set(-1.28, y, 0);
+        const sideR = new THREE.Mesh(new THREE.BoxGeometry(0.065, 0.065, 2.32), mCopper);
+        sideR.position.set(1.28, y, 0);
         this.group.add(topF, topB, sideL, sideR);
       }
       // Gold-leaf electroscope on a stand inside the cage
       const stand = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.09, 1.05, 10), mWood);
-      stand.position.set(-0.72, 1.02, 0.2);
+      stand.position.set(-0.62, 1.02, 0.2);
       const jar = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.34, 14), mGlass);
-      jar.position.set(-0.72, 1.68, 0.2);
+      jar.position.set(-0.62, 1.68, 0.2);
       this.leafL = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.16, 0.05), mBrass);
       this.leafR = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.16, 0.05), mBrass);
-      this.leafL.position.set(-0.75, 1.66, 0.2);
-      this.leafR.position.set(-0.69, 1.66, 0.2);
+      this.leafL.position.set(-0.65, 1.66, 0.2);
+      this.leafR.position.set(-0.59, 1.66, 0.2);
       this.group.add(stand, jar, this.leafL, this.leafR);
 
       // Electrostatic generator compactly staged outside left of the cage so wheel + bolt + cage fit every shot
-      const genBase = new THREE.Mesh(new THREE.BoxGeometry(1.05, 0.85, 0.8), mWood);
-      genBase.position.set(-2.55, 0.42, 0.2);
-      this.wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.68, 0.68, 0.06, 24), mGlass);
+      const genBase = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.85, 0.75), mWood);
+      genBase.position.set(-2.05, 0.42, 0.2);
+      this.wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.62, 0.06, 24), mGlass);
       this.wheel.rotation.x = Math.PI / 2;
-      this.wheel.position.set(-2.55, 1.48, 0.2);
-      const brassOrb = new THREE.Mesh(new THREE.SphereGeometry(0.22, 18, 14), mBrass);
-      brassOrb.position.set(-1.92, 1.75, 0.2);
+      this.wheel.position.set(-2.05, 1.45, 0.2);
+      const brassOrb = new THREE.Mesh(new THREE.SphereGeometry(0.2, 18, 14), mBrass);
+      brassOrb.position.set(-1.58, 1.72, 0.2);
       // HDR lightning bolt mesh (luminance > 1.0 triggers BloomEffect!)
       const boltMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(2.4, 3.4, 6.8) });
-      this.boltMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.65, 8), boltMat);
+      this.boltMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.52, 8), boltMat);
       this.boltMesh.rotation.z = Math.PI / 2.2;
-      this.boltMesh.position.set(-1.66, 1.72, 0.2);
+      this.boltMesh.position.set(-1.42, 1.7, 0.2);
       this.boltMesh.layers.set(NOINK);
       this.group.add(genBase, this.wheel, brassOrb, this.boltMesh);
 
@@ -371,13 +378,13 @@ class EpisodeRig {
       this.bigBeamPivot.rotation.y = shot.id >= 4 ? 0.2 : -0.2;
       this.magnetPaper.position.y = 1.38 + 0.025 * Math.sin(t * 3);
 
-      // Cavendish positioned clearly to the left of the spheres so he never blocks the apparatus
-      const cavX = shot.id <= 5 ? SX - 1.55 : SX - 2.65;
+      // Cavendish positioned inside the 9:16 portrait frame beside the apparatus
+      const cavX = shot.id <= 5 ? SX - 0.95 : SX - 1.55;
       const cavExpr: Expr = shot.id === 8 ? "shock" : shot.id >= 13 ? "grin" : "nervous";
       places.push({
         key: `cav|${cavExpr}|${blink(1) ? 1 : 0}`,
         draw: (p) => bodyFront(p, CAVENDISH_OUTFIT, { mode: "stand", expr: cavExpr, blink: blink(1), look: 1, wave: 0.4 }),
-        x: cavX, y: SY, z: SZ + 0.45,
+        x: cavX, y: SY, z: SZ - 0.35,
       });
       // Two grown men for scale next to the giant lead spheres in shots 4-5
       if (shot.id === 4 || shot.id === 5) {
@@ -385,7 +392,7 @@ class EpisodeRig {
           places.push({
             key: `scaleMan|${i}|${blink(i + 2) ? 1 : 0}`,
             draw: (p) => bodyFront(p, townsfolk(i + 2), { mode: "stand", expr: "shock", blink: blink(i + 2) }),
-            x: SX + 1.45 + i * 0.85, y: SY, z: SZ + 0.45,
+            x: SX + 0.82 + i * 0.58, y: SY, z: SZ - 0.25,
           });
         }
       }
@@ -393,12 +400,12 @@ class EpisodeRig {
         places.push({
           key: `kidMag|${blink(5) ? 1 : 0}`,
           draw: (p) => bodyFront(p, KID, { mode: "stand", expr: "grin", blink: blink(5), wave: 0.6 }),
-          x: PX - 1.05, y: PY, z: PZ - 0.15, scale: 0.82,
+          x: PX - 0.78, y: PY, z: PZ - 0.15, scale: 0.82,
         });
         places.push({
           key: `parMag|${blink(6) ? 1 : 0}`,
           draw: (p) => bodyFront(p, PARENT, { mode: "stand", expr: "relief", blink: blink(6) }),
-          x: PX + 1.05, y: PY, z: PZ - 0.15,
+          x: PX + 0.78, y: PY, z: PZ - 0.15,
         });
       }
       if (shot.id === 15) {
@@ -408,7 +415,7 @@ class EpisodeRig {
           places.push({
             key: `lab|${i}|${Math.floor(t * 6) % 4}`,
             draw: (p) => bodySide(p, LAB_OUTFIT, { mode: "march", expr: "nervous", phase: (t * 1.5 + i * 0.3) % 1, blink: blink(i + 7) }),
-            x: SX + 1.1 + i * 0.95 + walk, y: SY, z: SZ + 0.85,
+            x: SX + 0.65 + i * 0.75 + walk, y: SY, z: SZ + 0.75,
           });
         }
       }
@@ -416,29 +423,29 @@ class EpisodeRig {
 
     if (this.ep === "magdeburg") {
       const snapped = shot.id >= 8 && shot.id <= 10;
-      const sep = snapped ? 0.55 * clamp01((f - 995) / 18) : 0;
+      const sep = snapped ? 0.48 * clamp01((f - 995) / 18) : 0;
       const strain = (shot.id >= 5 && shot.id <= 7) ? 0.03 * Math.sin(t * 22) : 0;
       this.hemiL.position.set(-sep + strain, 1.18, 0);
       this.hemiR.position.set(sep - strain, 1.18, 0);
       this.piston.position.y = 0.88 + (shot.id <= 4 ? 0.16 * Math.abs(Math.sin(t * 6)) : 0);
-      this.ropeL.set(Array.from({ length: 12 }, (_, i) => V(-0.6 - sep - i * 0.32, 1.18 - (snapped ? 0.32 * Math.sin((i / 11) * Math.PI) : 0.04 * Math.sin((i / 11) * Math.PI)), 0)));
-      this.ropeR.set(Array.from({ length: 12 }, (_, i) => V(0.6 + sep + i * 0.32, 1.18 - (snapped ? 0.32 * Math.sin((i / 11) * Math.PI) : 0.04 * Math.sin((i / 11) * Math.PI)), 0)));
+      this.ropeL.set(Array.from({ length: 12 }, (_, i) => V(-0.6 - sep - i * 0.24, 1.18 - (snapped ? 0.28 * Math.sin((i / 11) * Math.PI) : 0.04 * Math.sin((i / 11) * Math.PI)), 0)));
+      this.ropeR.set(Array.from({ length: 12 }, (_, i) => V(0.6 + sep + i * 0.24, 1.18 - (snapped ? 0.28 * Math.sin((i / 11) * Math.PI) : 0.04 * Math.sin((i / 11) * Math.PI)), 0)));
       this.plunger.position.set(0, 0.14, 0);
 
       // Mayor Otto von Guericke standing clearly visible beside the copper sphere
       places.push({
         key: `guericke|${shot.id >= 8 ? 1 : 0}|${blink(1) ? 1 : 0}`,
         draw: (p) => bodyFront(p, GUERICKE_OUTFIT, { mode: "stand", expr: shot.id >= 8 ? "grin" : "stern", blink: blink(1), wave: shot.id === 8 ? 0.7 : undefined }),
-        x: SX - 0.55, y: SY, z: SZ - 0.55,
+        x: SX - 0.45, y: SY, z: SZ - 0.55,
       });
-      // Pulling teams on left and right staged compactly so they stay in frame with the sphere
+      // Pulling teams on left and right staged compactly so multiple pullers stay in the 9:16 frame
       for (const side of [-1, 1]) {
         for (let k = 0; k < 4; k++) {
-          const px = SX + side * (1.25 + k * 0.65);
+          const px = SX + side * (0.95 + k * 0.45);
           places.push({
             key: `puller|${side}|${k}|${Math.floor(t * 4) % 2}`,
             draw: (p) => bodySide(p, townsfolk(k + (side > 0 ? 4 : 0)), { mode: "push", expr: snapped ? "shock" : "stern", phase: (t * 2 + k * 0.25) % 1, pose: 0.85 }),
-            x: px, y: SY, z: SZ + 0.15 + (k % 2) * 0.28, mirror: side < 0,
+            x: px, y: SY, z: SZ + 0.12 + (k % 2) * 0.25, mirror: side < 0,
           });
         }
       }
@@ -449,12 +456,12 @@ class EpisodeRig {
         places.push({
           key: `plungerGuy|${blink(3) ? 1 : 0}`,
           draw: (p) => bodyFront(p, PARENT, { mode: "stand", expr: "stern", blink: blink(3), wave: 0.5 }),
-          x: PX - 1.05, y: PY, z: PZ - 0.15,
+          x: PX - 0.78, y: PY, z: PZ - 0.15,
         });
         places.push({
           key: `plungerKid|${blink(4) ? 1 : 0}`,
           draw: (p) => bodyFront(p, KID, { mode: "stand", expr: "shock", blink: blink(4) }),
-          x: PX + 1.05, y: PY, z: PZ - 0.15, scale: 0.82,
+          x: PX + 0.78, y: PY, z: PZ - 0.15, scale: 0.82,
         });
       }
     }
@@ -476,23 +483,23 @@ class EpisodeRig {
       places.push({
         key: `assist|${Math.floor(t * 6) % 2}`,
         draw: (p) => bodySide(p, OFFICER, { mode: "march", expr: sparking ? "shock" : "nervous", phase: (t * 2) % 1 }),
-        x: SX - 3.05, y: SY, z: SZ + 0.25,
+        x: SX - 2.35, y: SY, z: SZ + 0.25,
       });
       // Front-row audience ducking / gasping outside right
       for (let i = 0; i < 3; i++) {
         places.push({
           key: `aud|${i}|${sparking ? 1 : 0}`,
           draw: (p) => bodyFront(p, townsfolk(i + 1), { mode: "stand", expr: sparking ? "shock" : "nervous", blink: blink(i + 4) }),
-          x: SX + 1.95 + i * 0.78, y: SY, z: SZ + 0.85,
+          x: SX + 1.48 + i * 0.56, y: SY, z: SZ + 0.75,
         });
       }
       if (sparking) {
-        fxList.push({ key: `spark|${f % 3}`, cw: 260, ch: 260, draw: (p) => fxStars(p, (f % 10) / 10), x: SX - 1.52, y: SY + 1.75, z: SZ + 0.35, w: 1.05, h: 1.05 });
+        fxList.push({ key: `spark|${f % 3}`, cw: 260, ch: 260, draw: (p) => fxStars(p, (f % 10) / 10), x: SX - 1.32, y: SY + 1.72, z: SZ + 0.35, w: 0.95, h: 0.95 });
       }
       // Shots 11-12 Analogy: people in a small room backing up to the outer walls, leaving the middle empty
       if (shot.id === 11 || shot.id === 12) {
         const pushU = shot.id === 11 ? clamp01((f - shot.a) / 60) : 1.0;
-        const rad = 0.5 + pushU * 1.25;
+        const rad = 0.45 + pushU * 0.95;
         for (let i = 0; i < 8; i++) {
           const ang = (i / 8) * Math.PI * 2;
           places.push({
