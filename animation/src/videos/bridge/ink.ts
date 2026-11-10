@@ -123,7 +123,7 @@ varying vec2 vUv;
 // pixel steps along x, y and both diagonals, and their length in px
 const vec2 STEP[4] = vec2[4](vec2(1.0, 0.0), vec2(0.0, 1.0), vec2(1.0, 1.0), vec2(1.0, -1.0));
 const float SLEN[4] = float[4](1.0, 1.0, 1.41421, 1.41421);
-#define RMAX 9   // covers 5.1 px x pxScale 1.333 = 6.8 px at 1440x2560 (+0.5 AA ramp)
+#define RMAX 4   // covers 5.1 px x pxScale 0.5 = 2.55 px at dpr 0.5 (+0.5 AA ramp)
 
 // textureLod: explicit LOD inside loops (nearest-filtered targets, no derivatives needed)
 float dist(sampler2D t, vec2 uv) { return -perspectiveDepthToViewZ(textureLod(t, uv, 0.0).x, cNear, cFar); }
