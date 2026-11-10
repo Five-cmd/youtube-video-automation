@@ -5,28 +5,28 @@
       "comp": "CavendishShort",
       "slug": "cavendish",
       "title": "He Weighed the Whole Planet From Outside the Room #physics #gravity",
-      "approved": false,
+      "approved": true,
       "posted": false
     },
     {
       "comp": "MagdeburgShort",
       "slug": "magdeburg",
       "title": "16 Horses vs. Empty Air #physics #pressure",
-      "approved": false,
+      "approved": true,
       "posted": false
     },
     {
       "comp": "FaradayShort",
       "slug": "faraday",
       "title": "He Got Struck by Lightning on Purpose #physics #electricity",
-      "approved": false,
+      "approved": true,
       "posted": false
     },
     {
       "comp": "BridgeShort",
       "slug": "bridge",
       "title": "74 Soldiers Broke a Bridge by Walking #physics #resonance",
-      "approved": false,
+      "approved": true,
       "posted": false
     }
   ]
