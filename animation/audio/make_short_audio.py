@@ -47,7 +47,7 @@ def build_audio(comp: str) -> Path:
     voice_wav = short_dir / "voice" / "voice.wav"
     words_json = short_dir / "voice" / "words.json"
     if not voice_wav.exists() or not words_json.exists():
-        subprocess.run([sys.executable, str(HERE / "make_voice.py"), str(short_dir), "en-US-GuyNeural", "+25%"], check=True)
+        subprocess.run([sys.executable, str(HERE / "make_voice.py"), str(short_dir), "en-US-GuyNeural"], check=True)
 
     # Also keep animation/voice/ populated for mix.py cache compatibility
     vdir = ANIM / "voice"
