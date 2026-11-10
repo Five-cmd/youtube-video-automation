@@ -84,7 +84,9 @@ jobs:
       - name: Render stills
         if: inputs.mode == 'stills'
         run: |
-          if [ "${{ inputs.comp }}" = "ALL_4" ]; then
+          if [ "${{ inputs.frames }}" = "BENCH" ]; then
+            npx remotion render src/index.ts "${{ inputs.comp }}" out/bench.mp4 --frames=0-5 --codec h264 --crf 18 --gl=swangle --concurrency=1 --log=verbose --timeout=600000
+          elif [ "${{ inputs.comp }}" = "ALL_4" ]; then
             for c in BridgeShort CavendishShort MagdeburgShort FaradayShort; do
               node scripts/cloud-stills.mjs "$c" "out/stills/${c}_" "${{ inputs.frames }}" "${{ inputs.scale }}"
             done
