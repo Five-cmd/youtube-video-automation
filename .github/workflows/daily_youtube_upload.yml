@@ -1,59 +1,102 @@
-name: 4x-Daily Physics Cartoon 3D Shorts Cloud Runner & Upload
+name: Cartoon 3D Shorts - 4x Daily Auto Post
 
+# Posts ONE approved cartoon short per run, 4 runs a day (Bangkok 06:00 / 09:00 / 21:00 / 23:00).
+# Pipeline (all on GitHub's machines, nothing on the user's PC):
+#   pick next approved+unposted comp from animation/queue.json -> voice + -15 LUFS mix -> Remotion/three.js render
+#   -> frame-by-frame QA gate -> YouTube upload -> mark posted in queue.json.
+# If no approved short is waiting, the run exits after ~1 minute without rendering or touching the YouTube API.
 on:
   schedule:
-    # 4 slots/day (Bangkok Time UTC+7: 06:00, 09:00, 21:00, 23:00)
-    - cron: '0 23 * * *'
-    - cron: '0 2 * * *'
-    - cron: '0 14 * * *'
-    - cron: '0 16 * * *'
+    - cron: "0 22 * * *"   # render starts 05:00 BKK -> posts ~06:00
+    - cron: "0 1 * * *"    # 08:00 BKK -> ~09:00
+    - cron: "0 13 * * *"   # 20:00 BKK -> ~21:00
+    - cron: "0 15 * * *"   # 22:00 BKK -> ~23:00
   workflow_dispatch:
 
 permissions:
   contents: write
 
+concurrency:
+  group: cartoon-post
+  cancel-in-progress: false
+
 jobs:
-  edit-and-upload:
+  post:
     runs-on: ubuntu-22.04
     timeout-minutes: 300
+    defaults:
+      run:
+        working-directory: animation
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Python 3.12 & Node 20
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-          cache: 'pip'
+      - name: Pick next approved short
+        id: pick
+        run: echo "comp=$(python3 post_queue.py next)" >> "$GITHUB_OUTPUT"
+
+      - name: Nothing approved - stop here
+        if: steps.pick.outputs.comp == ''
+        run: echo "No approved, unposted short in queue.json. Nothing to do."
 
       - uses: actions/setup-node@v4
+        if: steps.pick.outputs.comp != ''
         with:
-          node-version: '20'
+          node-version: "20"
 
-      - name: Install FFmpeg, Headless Chrome deps & Blender 4.2 LTS
+      - uses: actions/setup-python@v5
+        if: steps.pick.outputs.comp != ''
+        with:
+          python-version: "3.12"
+
+      - name: Install system + packages
+        if: steps.pick.outputs.comp != ''
         run: |
           sudo apt-get update
-          sudo apt-get install -y ffmpeg libxkbcommon0 libsm6 libxext6 libxrender-dev \
-            libnss3 libdbus-1-3 libatk1.0-0 libgbm-dev libasound2 libxrandr2 libxfixes3 libxcomposite1 libxdamage1
-          curl -sL https://download.blender.org/release/Blender4.2/blender-4.2.3-linux-x64.tar.xz | tar -xJ
-          sudo ln -s $(pwd)/blender-4.2.3-linux-x64/blender /usr/local/bin/blender
+          sudo apt-get install -y ffmpeg libnss3 libdbus-1-3 libatk1.0-0 libgbm-dev libasound2 libxrandr2 \
+            libxkbcommon-dev libxfixes3 libxcomposite1 libxdamage1 libatk-bridge2.0-0 libpango-1.0-0 libcairo2 libcups2
+          npm install --no-audit --no-fund
+          pip install --quiet numpy scipy pillow edge-tts imageio-ffmpeg google-api-python-client google-auth
+          bash scripts/fetch-kenney.sh public/bridge/kenney || true
+          npx remotion browser ensure
 
-      - name: Install Python dependencies
-        run: pip install -r requirements.txt numpy scipy pillow edge-tts
+      - name: Voice + score + SFX, mastered to -15 LUFS
+        if: steps.pick.outputs.comp != ''
+        run: python3 audio/make_short_audio.py "${{ steps.pick.outputs.comp }}"
 
-      - name: Run Cloud Physics Short Pipeline & YouTube Upload (4x/day)
+      - name: Render picture (1080x1920) and mux audio
+        if: steps.pick.outputs.comp != ''
+        run: |
+          C="${{ steps.pick.outputs.comp }}"
+          npx remotion render src/index.ts "$C" out/picture.mp4 --codec h264 --crf 18 --gl=swangle --concurrency=4 --timeout=600000
+          ffmpeg -y -i out/picture.mp4 -i "out/$C/mix.wav" -map 0:v:0 -map 1:a:0 -c:v copy -c:a aac -b:a 256k -shortest out/final.mp4
+
+      - name: QA gate (blocks the upload on black / frozen / white frames or missing audio)
+        if: steps.pick.outputs.comp != ''
+        env:
+          QA_STRICT: "1"
+        run: python3 scripts/short_qa.py out/final.mp4 out/qa
+
+      - name: Upload to YouTube
+        if: steps.pick.outputs.comp != ''
         env:
           YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
           YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
           YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
-          CI: "true"
-          HEADLESS: "1"
-          TZ: Asia/Bangkok
-        run: python process_and_upload.py --cloud
+        run: python3 post_queue.py upload "${{ steps.pick.outputs.comp }}"
 
-      - name: Save uploaded video history back to repository
+      - name: Save queue state
+        if: steps.pick.outputs.comp != ''
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add uploaded_history.json topics_roadmap_4days.json
-          git diff --staged --quiet || (git commit -m "chore: record uploaded video in history" && git push)
+          git add queue.json
+          git diff --staged --quiet || (git commit -m "cartoon: posted ${{ steps.pick.outputs.comp }}" && git pull --rebase && git push)
+
+      - uses: actions/upload-artifact@v4
+        if: always() && steps.pick.outputs.comp != ''
+        with:
+          name: posted-${{ steps.pick.outputs.comp }}-${{ github.run_number }}
+          path: |
+            animation/out/final.mp4
+            animation/out/qa/
+          retention-days: 7
