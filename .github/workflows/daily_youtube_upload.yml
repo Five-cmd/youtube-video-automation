@@ -67,7 +67,7 @@ jobs:
         if: steps.pick.outputs.comp != ''
         run: |
           C="${{ steps.pick.outputs.comp }}"
-          npx remotion render src/index.ts "$C" out/picture.mp4 --codec h264 --crf 18 --gl=swangle --concurrency=4 --timeout=600000
+          npx remotion render src/index.ts "$C" out/picture.mp4 --codec h264 --crf 18 --gl=swangle --concurrency=2 --timeout=600000
           ffmpeg -y -i out/picture.mp4 -i "out/$C/mix.wav" -map 0:v:0 -map 1:a:0 -c:v copy -c:a aac -b:a 256k -shortest out/final.mp4
 
       - name: QA gate (blocks the upload on black / frozen / white frames or missing audio)
