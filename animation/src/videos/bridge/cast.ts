@@ -23,7 +23,8 @@ const makeEntry = (w: number, h: number): Entry => {
   const cv = document.createElement("canvas");
   cv.width = w; cv.height = h;
   const tex = new THREE.CanvasTexture(cv);
-  tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
+  tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 1;
+  tex.generateMipmaps = false; tex.minFilter = THREE.LinearFilter;
   return { cv, tex, w, h };
 };
 export class Pool {
@@ -119,16 +120,16 @@ export type FxPlace = { key: string; cw: number; ch: number; draw: (p: Pen) => v
 export type CamInfo = { pos: THREE.Vector3; right: THREE.Vector3; sun?: THREE.Vector3 };
 
 const hh = (i: number, s = 0) => { const v = Math.sin(i * 127.1 + s * 311.7) * 43758.5453; return v - Math.floor(v); };
-const q = (v: number, n = 120) => Math.round(v * n) / n;
+const q = (v: number, n = 20) => Math.round(v * n) / n;
 const SOLDIER = [0, 1, 2, 3].map((v) => soldier(v));
 const BARE = [0, 1, 2, 3].map((v) => soldier(v, { hat: null }));
 const FOLK = [0, 1, 2, 3, 4, 5].map((v) => townsfolk(v));
 const vOf = (i: number) => (i * 7 + (i >> 2)) % 4;
 /** head-shape seed: 7 shapes, so marching soldiers in step still share canvases */
 const seedOf = (i: number) => ((i * 5 + 3) % 7) + 1;
-/** drawing resolution by distance: [canvas w, h, scale from the 600 x 1000 design]; sized for the 1440 x 2560 final */
+/** drawing resolution by distance: [canvas w, h, scale from the 600 x 1000 design] */
 const tier = (d: number): [number, number, number] =>
-  d < 3.2 ? [1800, 3000, 3.0] : d < 6.5 ? [1080, 1800, 1.8] : d < 16 ? [480, 800, 0.8] : [240, 400, 0.4];
+  d < 4.5 ? [480, 800, 0.8] : d < 14 ? [300, 500, 0.5] : [180, 300, 0.3];
 
 // ---------------- light ----------------
 const SUN = new THREE.Vector3(0.5, 0.75, -0.4).normalize();
