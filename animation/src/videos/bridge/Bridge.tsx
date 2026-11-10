@@ -98,7 +98,7 @@ const Inner: React.FC<{ id: number; kit: Kit }> = ({ id, kit }) => {
 };
 
 /** test stills only: inputProps `{ post: { dpr: 0.5 } }` forces the WebGL buffer size (R3F clamps dpr to >= 1 by default) */
-const dprOverride = () => (getInputProps() as { post?: { dpr?: number } }).post?.dpr ?? 0.5;
+const dprOverride = () => (getInputProps() as { post?: { dpr?: number } }).post?.dpr ?? 0.35;
 const ShotView: React.FC<{ id: number; kit: Kit; alpha: number }> = ({ id, kit, alpha }) => (
   <AbsoluteFill style={{ opacity: alpha }}>
     <ThreeCanvas width={1080} height={1920} dpr={dprOverride()} shadows gl={{ antialias: false, stencil: false, powerPreference: "high-performance", toneMappingExposure: 1.0 }}
