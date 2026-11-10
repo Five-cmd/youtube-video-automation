@@ -2,8 +2,6 @@
 // backstays, anchors, bunting, flags) deformed every frame from the story physics, the park swing, smoke, clouds
 // and the cast. update(id, f, camera) poses everything for shot `id` at frame f (pure function of id + f).
 import * as THREE from "three";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { staticFile } from "remotion";
 import { Batch, Strand, boxGeo, V, lam, buildTown, flagTex, Kit, Ray, kitClone } from "./build";
 import { beam, bed, rep, ctex, planksHD, beamHD, stoneHD, cobbleHD, grassHD, chainHD, waterNear, waterFar, cloudHD } from "./paint";
 import { Pen, fxSign } from "./toon";
@@ -14,18 +12,7 @@ import { Pool, Actor, Fx, stage, snapFx, splashFx, creakFx, SIGN_AT, SU_SWING } 
 import { FPS, D0, SHOTS, PARK, ANCHOR, SNAP, camAt, bridgeState, deckY, dropW, shapeZ, snapEnd, front, BridgeState, V3, smooth, FOREGROUND, ShotDef } from "./story";
 
 // ---------------- assets ----------------
-const KENNEY = ["tree_oak", "tree_default", "tree_detailed", "tree_fat", "tree_cone", "tree-high-round", "tree", "plant_bushLarge", "plant_bushDetailed",
-  "plant_bush", "hedge", "flower_redA", "flower_yellowA", "flower_purpleA", "grass_large", "grass", "lily_large", "lantern", "cart", "stall-red",
-  "stall-green", "stall-bench", "banner-red", "banner-green", "windmill", "canoe"];
-let kitP: Promise<Kit> | null = null;
-export const loadKit = () => {
-  if (!kitP) {
-    const loader = new GLTFLoader();
-    kitP = Promise.all(KENNEY.map((n) => loader.loadAsync(staticFile(`bridge/kenney/${n}.glb`)).then((g) => [n, g.scene] as const).catch(() => [n, null] as const)))
-      .then((list) => Object.fromEntries(list.filter((e) => e[1]).map(([n, s]) => [n, s!])) as Kit);
-  }
-  return kitP;
-};
+export const loadKit = (): Promise<Kit> => Promise.resolve({});
 
 // ---------------- bridge geometry constants ----------------
 const NZ = 121; // deck samples every 0.5 m from z = -30 to 30
@@ -140,7 +127,7 @@ export class World {
     this.hemi = new THREE.HemisphereLight("#cfe6ff", "#6c5c8c", 1.1);
     this.sun = new THREE.DirectionalLight("#fff0d6", 2.6);
     this.sun.castShadow = true;
-    this.sun.shadow.mapSize.set(4096, 4096);
+    this.sun.shadow.mapSize.set(1024, 1024);
     this.fill = new THREE.DirectionalLight("#9fb8ff", 0.35);
     R.add(this.hemi, this.sun, this.sun.target, this.fill, this.fill.target);
     this.cloudMaps = { day: [0, 1, 2, 3].map((k) => cloudHD(k, LOOK.day.cloud)), golden: [0, 1, 2, 3].map((k) => cloudHD(k, LOOK.golden.cloud)) };
@@ -221,7 +208,7 @@ export class World {
     // water: its own mesh so the ripples can drift
     // river: depression-angle gradient + sparse marks (textures.md 5.2 #4), sun visibility captured for the bridge shadow
     const wNear = waterNear(), wFar = waterFar();
-    for (const t of [wNear, wFar]) { t.colorSpace = THREE.NoColorSpace; t.anisotropy = 16; t.needsUpdate = true; }
+    for (const t of [wNear, wFar]) { t.colorSpace = THREE.NoColorSpace; t.anisotropy = 1; t.needsUpdate = true; }
     this.WU = {
       wNearC: { value: new THREE.Color() }, wMidC: { value: new THREE.Color() }, wFarC: { value: new THREE.Color() },
       wCrest: { value: new THREE.Color() }, wTrough: { value: new THREE.Color() }, wGlint: { value: new THREE.Color() },
@@ -264,7 +251,7 @@ export class World {
     this.deckSide.setAttribute("uv", new THREE.Float32BufferAttribute(su, 2));
     this.deckSide.setIndex(si);
     const deckM = lam("planksHD", () => ({ map: planksHD() })), sideM = lam("deckSide", () => ({ map: beamHD() }));
-    for (const mm of [deckM, sideM]) if (mm.map) { mm.map.anisotropy = 16; mm.map.needsUpdate = true; }
+    for (const mm of [deckM, sideM]) if (mm.map) { mm.map.anisotropy = 1; mm.map.needsUpdate = true; }
     for (const [g, m] of [[this.deckTop, deckM], [this.deckSide, sideM]] as const) {
       const mesh = new THREE.Mesh(g, m); mesh.castShadow = true; mesh.receiveShadow = true; mesh.frustumCulled = false; R.add(mesh);
     }
@@ -345,8 +332,9 @@ export class World {
 
   private actor(i: number) { while (this.actors.length <= i) this.actors.push(new Actor(this.root)); return this.actors[i]; }
   private fx(i: number) { while (this.fxs.length <= i) this.fxs.push(new Fx(this.root)); return this.fxs[i]; }
+  private lastBridgeKey = "";
 
-  update(id: number, f: number, cam: THREE.PerspectiveCamera, scene: THREE.Scene) {
+  update(id: number, f: number, cam: THREE.PerspectiveCamera, scene: THREE.Scene, skipCast = false) {
     const t = f / FPS, s = SHOTS[id - 1], tau = s.tau(t), b = bridgeState(id, t), L = LIGHTS[s.light];
     // ---- camera ----
     const c = camAt(id, f);
@@ -396,16 +384,23 @@ export class World {
     untone(wc.crest, W.wCrest.value); untone(wc.trough, W.wTrough.value); untone(wc.glint, W.wGlint.value);
     W.wShade.value.set(...wc.shade); W.wTime.value = t;
     // ---- foreground framing objects: inside their frames AND their own shot (so a crossfade layer never shows them) ----
-    for (const g of this.fgs) g.o.visible = f >= g.a && f < g.b && g.a < s.b && g.b > s.a;
-    // ---- bridge ----
-    this.poseBridge(b, t, tau, id);
-    this.sign.visible = id >= 14;
+    for (const g of this.fgs) g.o.visible = !skipCast && f >= g.a && f < g.b && g.a < s.b && g.b > s.a;
     for (const sm of this.smoke) {
       const u = (t * 0.11 + sm.k) % 1, sz = 3 + u * 9;
       sm.m.position.set(sm.top[0] - u * 18, sm.top[1] + u * 13 + u * u * 4, sm.top[2] + u * 3);
       sm.m.scale.set(sz, sz, 1); sm.m.quaternion.copy(cam.quaternion);
       sm.mat.opacity = 0.85 * (1 - u) ** 1.2;
     }
+    if (skipCast) {
+      if (!this.lastBridgeKey) {
+        this.poseBridge({ bounce: 0, drop: 0, snap: 0, collapsed: false }, 0, 0, 2);
+      }
+      this.sign.visible = false;
+      return focus;
+    }
+    // ---- bridge ----
+    this.poseBridge(b, t, tau, id);
+    this.sign.visible = id >= 14;
     // ---- cast + effects ----
     const right = V(0, 0, 0).setFromMatrixColumn(cam.matrixWorld, 0);
     const st = stage(id, t, b, { pos: cam.position, right });
@@ -459,6 +454,19 @@ export class World {
   }
 
   private poseBridge(b: BridgeState, t: number, tau: number, id: number) {
+    // tower flags waving
+    for (const fl of this.flags) {
+      const p = fl.geometry.attributes.position as THREE.BufferAttribute;
+      for (let i = 0; i < p.count; i++) {
+        const u = (i % 13) / 12, y = i < 13 ? 0.5 : -0.5;
+        p.setXYZ(i, -u * 1.7, y + 0.05 * u * Math.sin(t * 4 - u * 3), 0.24 * u * Math.sin(t * 5.5 - u * 5 + fl.position.z));
+      }
+      p.needsUpdate = true;
+    }
+    const ts = id === 15 || b.snap === 0 ? -1 : Math.max(0, (id >= 9 ? 9 : tau - SNAP));
+    const bKey = `${b.bounce.toFixed(4)}|${b.drop.toFixed(4)}|${b.snap.toFixed(4)}|${ts.toFixed(3)}|${id === 8 ? 1 : 0}`;
+    if (bKey === this.lastBridgeKey) return;
+    this.lastBridgeKey = bKey;
     const dy = ZS.map((z) => deckY(z, b));
     const top = this.deckTop.attributes.position.array as Float32Array, tn = this.deckTop.attributes.normal.array as Float32Array;
     const side = this.deckSide.attributes.position.array as Float32Array;
@@ -516,7 +524,6 @@ export class World {
     this.stays[0].set(blend(whip, drape(V(-2.7, chainY(-27, b), -27), -2.9, fallenEnd, n), kd));
     this.eye.position.copy(b.drop > 0 ? fallenEnd : e);
     // the bolt: whole until it snaps, then two halves fly off and land on the bank
-    const ts = id === 15 || b.snap === 0 ? -1 : Math.max(0, (id >= 9 ? 9 : tau - SNAP));
     if (ts < 0) {
       this.boltA.position.set(BOLT[0] - 0.155, BOLT[1] + 0.4 * jerk, BOLT[2] + jerk); this.boltB.position.set(BOLT[0] + 0.155, BOLT[1] + 0.4 * jerk, BOLT[2] + jerk);
       this.boltA.rotation.set(0, 0, 0); this.boltB.rotation.set(0, 0, 0);
@@ -527,15 +534,6 @@ export class World {
         m.position.set(BOLT[0] + vx * tl + (vx > 0 ? 0.155 : -0.155), BOLT[1] + vy * tl - 4.9 * tl * tl, BOLT[2] + vz * tl);
         m.rotation.set(sp * tl * 0.4, sp * tl, 0);
       }
-    }
-    // tower flags waving
-    for (const fl of this.flags) {
-      const p = fl.geometry.attributes.position as THREE.BufferAttribute;
-      for (let i = 0; i < p.count; i++) {
-        const u = (i % 13) / 12, y = i < 13 ? 0.5 : -0.5;
-        p.setXYZ(i, -u * 1.7, y + 0.05 * u * Math.sin(t * 4 - u * 3), 0.24 * u * Math.sin(t * 5.5 - u * 5 + fl.position.z));
-      }
-      p.needsUpdate = true;
     }
   }
 }
