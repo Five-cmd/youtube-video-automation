@@ -1,0 +1,33 @@
+{
+  "_doc": "Posting queue for the cartoon-3d-short pipeline. The daily workflow posts the first entry with approved=true and posted=false, one per run (4 runs/day). Only approved entries are ever uploaded: set approved=true after reviewing the cloud render.",
+  "shorts": [
+    {
+      "comp": "CavendishShort",
+      "slug": "cavendish",
+      "title": "He Weighed the Whole Planet From Outside the Room #physics #gravity",
+      "approved": false,
+      "posted": false
+    },
+    {
+      "comp": "MagdeburgShort",
+      "slug": "magdeburg",
+      "title": "16 Horses vs. Empty Air #physics #pressure",
+      "approved": false,
+      "posted": false
+    },
+    {
+      "comp": "FaradayShort",
+      "slug": "faraday",
+      "title": "He Got Struck by Lightning on Purpose #physics #electricity",
+      "approved": false,
+      "posted": false
+    },
+    {
+      "comp": "BridgeShort",
+      "slug": "bridge",
+      "title": "74 Soldiers Broke a Bridge by Walking #physics #resonance",
+      "approved": false,
+      "posted": false
+    }
+  ]
+}
