@@ -51,4 +51,5 @@ async def main(d: Path, voice: str, rate: str):
 
 if __name__ == "__main__":
     d = Path(sys.argv[1])
-    asyncio.run(main(d, sys.argv[2] if len(sys.argv) > 2 else "en-US-GuyNeural", sys.argv[3] if len(sys.argv) > 3 else "+25%"))
+    default_rate = "+8%" if d.name == "bridge" else "+25%"
+    asyncio.run(main(d, sys.argv[2] if len(sys.argv) > 2 else "en-US-GuyNeural", sys.argv[3] if len(sys.argv) > 3 else default_rate))
