@@ -557,13 +557,9 @@ const fwd = new THREE.Vector3();
 
 const EpInner: React.FC<{ ep: EpId; kit: Kit; shots: EpShot[]; shot: EpShot }> = ({ ep, kit, shot }) => {
   const f = useCurrentFrame();
-  const { camera, scene } = useThree();
-  const world = useMemo(() => {
-    const t0 = performance.now();
-    const w = new World(kit);
-    console.warn(`TIMING new World: ${(performance.now() - t0).toFixed(0)}ms`);
-    return w;
-  }, [kit]);
+  const { camera, scene, gl } = useThree();
+  const lastShot = React.useRef(-1);
+  const world = useMemo(() => new World(kit), [kit]);
   const rig = useMemo(() => new EpisodeRig(ep, world.root), [ep, world]);
   const fx = useMemo(() => ({
     ink: new InkPass(scene, camera as THREE.PerspectiveCamera),
@@ -582,19 +578,22 @@ const EpInner: React.FC<{ ep: EpId; kit: Kit; shots: EpShot[]; shot: EpShot }> =
     </EffectComposer>
   ), [fx]);
 
-  const tUp = performance.now();
   const cam = camera as THREE.PerspectiveCamera;
   // Let base World update sky, river, town, clouds, and light presets (shot 11/12/13 = golden, others = day)
   const baseId = shot.light === "golden" ? 12 : 2;
   world.update(baseId, f, cam, scene, true);
   const look = rig.update(f, shot, cam, world);
+  gl.shadowMap.autoUpdate = false;
+  if (lastShot.current !== shot.id) {
+    gl.shadowMap.needsUpdate = true;
+    lastShot.current = shot.id;
+  }
   noInkFallback(world.root);
 
   cam.getWorldDirection(fwd);
   fx.lens.focus = Math.max(0.3, look.sub(cam.position).dot(fwd));
   fx.lens.cInf = shot.cInf;
   gradeFor(fx.grade, shot.light);
-  if (f < 10) console.warn(`TIMING frame ${f} cpu-update: ${(performance.now() - tUp).toFixed(1)}ms`);
 
   return (
     <>
@@ -615,7 +614,7 @@ const makeEpisodeComp = (ep: EpId): React.FC => {
     const flash = f >= 130 && f < 134 ? [1, 0.75, 0.45, 0.2][f - 130] : 0;
     return (
       <AbsoluteFill style={{ background: "#cfe3f2" }}>
-        <ThreeCanvas width={1080} height={1920} dpr={0.375} shadows gl={{ antialias: false, stencil: false, powerPreference: "high-performance", toneMappingExposure: 1.0 }}
+        <ThreeCanvas width={1080} height={1920} dpr={0.5} shadows gl={{ antialias: false, stencil: false, powerPreference: "high-performance", toneMappingExposure: 1.0 }}
           camera={{ fov: 38, near: 0.2, far: 1500 }}>
           <EpInner ep={ep} kit={kit} shots={shots} shot={shot} />
         </ThreeCanvas>
