@@ -577,7 +577,6 @@ const EpInner: React.FC<{ ep: EpId; kit: Kit; shots: EpShot[]; shot: EpShot }> =
     <EffectComposer multisampling={0}>
       <primitive object={fx.ink} dispose={null} />
       <primitive object={fx.lens.main} dispose={null} />
-      <primitive object={fx.bloom} dispose={null} />
       <primitive object={fx.tone} dispose={null} />
       <primitive object={fx.grade} dispose={null} />
     </EffectComposer>
@@ -616,7 +615,7 @@ const makeEpisodeComp = (ep: EpId): React.FC => {
     const flash = f >= 130 && f < 134 ? [1, 0.75, 0.45, 0.2][f - 130] : 0;
     return (
       <AbsoluteFill style={{ background: "#cfe3f2" }}>
-        <ThreeCanvas width={1080} height={1920} dpr={0.5} shadows gl={{ antialias: false, stencil: false, powerPreference: "high-performance", toneMappingExposure: 1.0 }}
+        <ThreeCanvas width={1080} height={1920} dpr={0.375} shadows gl={{ antialias: false, stencil: false, powerPreference: "high-performance", toneMappingExposure: 1.0 }}
           camera={{ fov: 38, near: 0.2, far: 1500 }}>
           <EpInner ep={ep} kit={kit} shots={shots} shot={shot} />
         </ThreeCanvas>
