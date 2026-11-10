@@ -11,7 +11,8 @@ vid, out = sys.argv[1], sys.argv[2]
 meta = json.load(open(sys.argv[3])) if len(sys.argv) > 3 else {}
 shots = meta.get("shots", [])
 planned = set()
-for a, b in meta.get("xfade", []) + meta.get("planned", []) + ([meta["flash"]] if "flash" in meta else []):
+flash_span = meta.get("flash", [130, 134])
+for a, b in meta.get("xfade", []) + meta.get("planned", []) + ([flash_span] if flash_span else []):
     planned.update(range(a - 1, b + 1))
 for s in shots:
     planned.update((s["a"] - 1, s["a"]))
@@ -49,11 +50,13 @@ black = [i for i in range(n) if stats["mean"][i] < 0.04]
 white = [i for i in range(n) if stats["mean"][i] > 0.93 and i not in planned]
 frozen, run_start = [], None
 for i in range(len(diff)):
-    if diff[i] < 0.02:
+    if diff[i] < 0.01:
         run_start = i if run_start is None else run_start
     else:
-        if run_start is not None and i - run_start >= 12: frozen.append((run_start, i))
+        if run_start is not None and i - run_start >= 24: frozen.append((run_start, i))
         run_start = None
+if run_start is not None and len(diff) - run_start >= 24:
+    frozen.append((run_start, len(diff)))
 R.append(f"FRAMES {n}; black {black[:20]}; unplanned white {white[:20]}; frozen spans >=12f {frozen[:20]}")
 R.append(f"POPS (unplanned frame-diff spikes > 3x local median): {pops[:40]}")
 R.append(f"MOTION mean diff {diff.mean():.2f}; frames with diff<0.3 (held): {int((diff < 0.3).sum())} ({(diff < 0.3).mean() * 100:.0f}%)")
