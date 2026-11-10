@@ -285,19 +285,19 @@ const vegGeo = new Map<string, THREE.BufferGeometry>();
 const lobeGeo = (q: number) => {
   const k = "lobe" + q;
   let g = vegGeo.get(k);
-  if (!g) { g = new THREE.SphereGeometry(1, [20, 14, 10][q], [14, 10, 7][q]); vegGeo.set(k, g); }
+  if (!g) { g = new THREE.SphereGeometry(1, [8, 6, 5][q], [6, 5, 4][q]); vegGeo.set(k, g); }
   return g;
 };
 const trunkGeo = () => {
   let g = vegGeo.get("trunk");
-  if (!g) { g = new THREE.CylinderGeometry(0.6, 1, 1, 10, 1, true).translate(0, 0.5, 0); vegGeo.set("trunk", g); }
+  if (!g) { g = new THREE.CylinderGeometry(0.6, 1, 1, 8, 1, true).translate(0, 0.5, 0); vegGeo.set("trunk", g); }
   return g;
 };
 /** rounded box (exact: inner box + radius), unit size along x, smooth normals; used for hedges */
 const hedgeGeo = () => {
   let g = vegGeo.get("hedge");
   if (!g) {
-    g = new THREE.BoxGeometry(1, 1, 1, 18, 10, 10);
+    g = new THREE.BoxGeometry(1, 1, 1, 6, 4, 4);
     const p = g.attributes.position as THREE.BufferAttribute, n = g.attributes.normal as THREE.BufferAttribute;
     // per-axis rounding radii in unit space (~0.35 m at the ends, ~0.45 m on top / sides at 3.3 x 1.56 x 1.17 m);
     // flat bottom (it sits on the lawn)
@@ -494,8 +494,8 @@ export const house = (b: Batch, x: number, z: number, yaw: number, w: number, d:
   if (inTheWay(x - hx, x + hx, y, y + h + d * 0.42 + 1.2, z - hz, z + hz)) return;
   const st = STYLES[si % STYLES.length];
   const m = new THREE.Matrix4().makeRotationY(yaw).setPosition(x, y, z);
-  const front = lam(`hf${si}_${w}_${h}`, () => ({ map: facadeHD(`hf${si}_${w}_${h}`, w, h, { ...st, door: true }) }));
-  const side = lam(`hs${si}_${h}`, () => ({ map: facadeHD(`hs${si}_${h}`, 8, h, st) }));
+  const front = lam(`hf${si}`, () => ({ map: facadeHD(`hf${si}`, 8, 8.4, { ...st, door: true }) }));
+  const side = lam(`hs${si}`, () => ({ map: facadeHD(`hs${si}`, 8, 8.4, st) }));
   const wall = lam("wall" + st.wall, () => ({ color: st.brick ? "#c8643f" : st.wall }));
   const hw = w / 2, hd = d / 2, rh = d * 0.42, o = 0.35;
   b.add(quad(V(-hw, 0, hd), V(hw, 0, hd), V(hw, h, hd), V(-hw, h, hd)), front, m);
@@ -659,12 +659,12 @@ export const buildTown = (root: THREE.Object3D, kit: Kit, rays: Ray[] = []) => {
   // trees: quays, gardens, valley, hilltops
   const trees = ["tree_oak", "tree_default", "tree_detailed", "tree_fat", "tree-high-round", "tree"];
   for (const bank of [-1, 1]) for (let x = -130; x <= 130; x += 22) if (Math.abs(x) > 12) prop(b, kit, pick(trees), x + r() * 4, D0, bank * 33.6, 7 + r() * 2.5, r() * 6);
-  for (let i = 0; i < 140; i++) {
+  for (let i = 0; i < 45; i++) {
     const x = (r() - 0.5) * 520, z = (r() < 0.5 ? -1 : 1) * (48 + r() * 220);
     if (inPark(x, z) || inMill(x, z) || inChurch(x, z) || Math.abs(x) < 16) continue;
     prop(b, kit, pick(trees), x, D0, z, 7 + r() * 4, r() * 6);
   }
-  for (let i = 0; i < 60; i++) {
+  for (let i = 0; i < 24; i++) {
     const a = r() * Math.PI * 2, d = 230 + r() * 160;
     prop(b, kit, pick(["tree_cone", "tree_default", "tree_oak"]), Math.cos(a) * d * 1.3, D0, Math.sin(a) * d, 12 + r() * 6, r() * 6);
   }
