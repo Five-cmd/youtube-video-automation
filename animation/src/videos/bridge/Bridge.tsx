@@ -48,7 +48,8 @@ const useKit = () => {
 
 const Inner: React.FC<{ id: number; kit: Kit }> = ({ id, kit }) => {
   const f = useCurrentFrame();
-  const { camera, scene } = useThree();
+  const { camera, scene, gl } = useThree();
+  const lastShot = React.useRef(-1);
   const world = useMemo(() => new World(kit), [kit]);
   const target = useMemo(() => new THREE.Vector3(), []);
   const on = useMemo(toggles, []);
@@ -74,6 +75,11 @@ const Inner: React.FC<{ id: number; kit: Kit }> = ({ id, kit }) => {
   ), [fx, on]);
   const cam = camera as THREE.PerspectiveCamera;
   target.copy(world.update(id, f, cam, scene));
+  gl.shadowMap.autoUpdate = false;
+  if (lastShot.current !== id || id === 8 || id === 11) {
+    gl.shadowMap.needsUpdate = true;
+    lastShot.current = id;
+  }
   noInkFallback(world.root);
   // thin-lens focus: distance along the view axis to the shot's focus point (default: the camera's look target)
   const d = dofAt(f);
@@ -92,7 +98,7 @@ const Inner: React.FC<{ id: number; kit: Kit }> = ({ id, kit }) => {
 };
 
 /** test stills only: inputProps `{ post: { dpr: 0.5 } }` forces the WebGL buffer size (R3F clamps dpr to >= 1 by default) */
-const dprOverride = () => (getInputProps() as { post?: { dpr?: number } }).post?.dpr ?? 0.375;
+const dprOverride = () => (getInputProps() as { post?: { dpr?: number } }).post?.dpr ?? 0.5;
 const ShotView: React.FC<{ id: number; kit: Kit; alpha: number }> = ({ id, kit, alpha }) => (
   <AbsoluteFill style={{ opacity: alpha }}>
     <ThreeCanvas width={1080} height={1920} dpr={dprOverride()} shadows gl={{ antialias: false, stencil: false, powerPreference: "high-performance", toneMappingExposure: 1.0 }}
