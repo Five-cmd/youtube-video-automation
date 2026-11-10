@@ -76,3 +76,17 @@ for k in range(0, n, 60):
     S.save(os.path.join(out, f"sheet_{k:04d}.jpg"), quality=85)
 open(os.path.join(out, "report.md"), "w", encoding="utf-8").write("\n".join(R) + "\n")
 print("\n".join(R))
+
+# Posting gate (used by the daily cloud workflow): fail the run instead of uploading a broken video.
+if os.environ.get("QA_STRICT"):
+    problems = []
+    if black: problems.append(f"{len(black)} black frames")
+    if white: problems.append(f"{len(white)} unplanned white frames")
+    if frozen: problems.append(f"{len(frozen)} frozen spans")
+    if not au: problems.append("no audio track")
+    if n < 30 * 30: problems.append(f"too short ({n} frames)")
+    json.dump({"pass": not problems, "problems": problems}, open(os.path.join(out, "gate.json"), "w"))
+    if problems:
+        print("QA GATE FAILED:", "; ".join(problems))
+        sys.exit(3)
+    print("QA GATE PASSED")
