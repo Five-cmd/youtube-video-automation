@@ -558,7 +558,12 @@ const fwd = new THREE.Vector3();
 const EpInner: React.FC<{ ep: EpId; kit: Kit; shots: EpShot[]; shot: EpShot }> = ({ ep, kit, shot }) => {
   const f = useCurrentFrame();
   const { camera, scene } = useThree();
-  const world = useMemo(() => new World(kit), [kit]);
+  const world = useMemo(() => {
+    const t0 = performance.now();
+    const w = new World(kit);
+    console.warn(`TIMING new World: ${(performance.now() - t0).toFixed(0)}ms`);
+    return w;
+  }, [kit]);
   const rig = useMemo(() => new EpisodeRig(ep, world.root), [ep, world]);
   const fx = useMemo(() => ({
     ink: new InkPass(scene, camera as THREE.PerspectiveCamera),
@@ -568,7 +573,17 @@ const EpInner: React.FC<{ ep: EpId; kit: Kit; shots: EpShot[]; shot: EpShot }> =
     grade: new GradeEffect(GRADES.day, GRADE_STRENGTH.day),
   }), [camera, scene]);
   useEffect(() => () => fx.ink.dispose(), [fx]);
+  const post = useMemo(() => (
+    <EffectComposer multisampling={0}>
+      <primitive object={fx.ink} dispose={null} />
+      <primitive object={fx.lens.main} dispose={null} />
+      <primitive object={fx.bloom} dispose={null} />
+      <primitive object={fx.tone} dispose={null} />
+      <primitive object={fx.grade} dispose={null} />
+    </EffectComposer>
+  ), [fx]);
 
+  const tUp = performance.now();
   const cam = camera as THREE.PerspectiveCamera;
   // Let base World update sky, river, town, clouds, and light presets (shot 11/12/13 = golden, others = day)
   const baseId = shot.light === "golden" ? 12 : 2;
@@ -580,17 +595,12 @@ const EpInner: React.FC<{ ep: EpId; kit: Kit; shots: EpShot[]; shot: EpShot }> =
   fx.lens.focus = Math.max(0.3, look.sub(cam.position).dot(fwd));
   fx.lens.cInf = shot.cInf;
   gradeFor(fx.grade, shot.light);
+  if (f < 10) console.warn(`TIMING frame ${f} cpu-update: ${(performance.now() - tUp).toFixed(1)}ms`);
 
   return (
     <>
       <primitive object={world.root} dispose={null} />
-      <EffectComposer multisampling={0}>
-        <primitive object={fx.ink} dispose={null} />
-        <primitive object={fx.lens.main} dispose={null} />
-        <primitive object={fx.bloom} dispose={null} />
-        <primitive object={fx.tone} dispose={null} />
-        <primitive object={fx.grade} dispose={null} />
-      </EffectComposer>
+      {post}
     </>
   );
 };
