@@ -120,10 +120,10 @@ uniform vec2 fogRange;   // scene fog near / far (m); far <= near = no fog tint
 uniform float fogStart;  // ink stays pure black up to here (m), then tints toward the fog colour
 varying vec2 vUv;
 
-// pixel steps along x, y and both diagonals, and their length in px
-const vec2 STEP[4] = vec2[4](vec2(1.0, 0.0), vec2(0.0, 1.0), vec2(1.0, 1.0), vec2(1.0, -1.0));
-const float SLEN[4] = float[4](1.0, 1.0, 1.41421, 1.41421);
-#define RMAX 4   // covers 5.1 px x pxScale 0.5 = 2.55 px at dpr 0.5 (+0.5 AA ramp)
+// pixel steps along x and y, and their length in px
+const vec2 STEP[2] = vec2[2](vec2(1.0, 0.0), vec2(0.0, 1.0));
+const float SLEN[2] = float[2](1.0, 1.0);
+#define RMAX 3   // covers 5.1 px x pxScale 0.5 = 2.55 px at dpr 0.5 (+0.5 AA ramp)
 
 // textureLod: explicit LOD inside loops (nearest-filtered targets, no derivatives needed)
 float dist(sampler2D t, vec2 uv) { return -perspectiveDepthToViewZ(textureLod(t, uv, 0.0).x, cNear, cFar); }
@@ -160,7 +160,7 @@ void main() {
   vec3 n0 = nc.xyz;
   vec3 P0 = viewPos(vUv, zc);
   float eD = 0.0, eN = 0.0;
-  for (int a = 0; a < 4; a++) {
+  for (int a = 0; a < 2; a++) {
     for (int r = 1; r <= RMAX; r++) {
       vec2 o = STEP[a] * texel * float(r);
       float d = (float(r) - 0.5) * SLEN[a];          // distance of this pixel's centre to an edge first seen at r
