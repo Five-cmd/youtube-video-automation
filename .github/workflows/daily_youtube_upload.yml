@@ -7,10 +7,10 @@ name: Cartoon 3D Shorts - 4x Daily Auto Post
 # If no approved short is waiting, the run exits after ~1 minute without rendering or touching the YouTube API.
 on:
   schedule:
-    - cron: "0 22 * * *"   # render starts 05:00 BKK -> posts ~06:00
-    - cron: "0 1 * * *"    # 08:00 BKK -> ~09:00
-    - cron: "0 13 * * *"   # 20:00 BKK -> ~21:00
-    - cron: "0 15 * * *"   # 22:00 BKK -> ~23:00
+    - cron: "0 21 * * *"   # render starts 04:00 BKK -> posts ~06:00 BKK
+    - cron: "0 0 * * *"    # render starts 07:00 BKK -> posts ~09:00 BKK
+    - cron: "0 12 * * *"   # render starts 19:00 BKK -> posts ~21:00 BKK
+    - cron: "0 14 * * *"   # render starts 21:00 BKK -> posts ~23:00 BKK
   workflow_dispatch:
 
 permissions:
