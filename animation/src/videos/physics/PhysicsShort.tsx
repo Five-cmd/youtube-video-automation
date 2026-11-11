@@ -485,12 +485,12 @@ class EpisodeRig {
         draw: (p) => bodySide(p, OFFICER, { mode: "march", expr: sparking ? "shock" : "nervous", phase: (t * 2) % 1 }),
         x: SX - 2.35, y: SY, z: SZ + 0.25,
       });
-      // Front-row audience ducking / gasping outside right
+      // Audience stands in front of the cage (+Z = 1.48) with a small Z stagger so they NEVER intersect the copper bars at Z = 1.12!
       for (let i = 0; i < 3; i++) {
         places.push({
           key: `aud|${i}|${sparking ? 1 : 0}`,
           draw: (p) => bodyFront(p, townsfolk(i + 1), { mode: "stand", expr: sparking ? "shock" : "nervous", blink: blink(i + 4) }),
-          x: SX + 1.48 + i * 0.56, y: SY, z: SZ + 0.75,
+          x: SX + 1.05 + i * 0.62, y: SY, z: SZ + 1.48 + (i % 2) * 0.16,
         });
       }
       if (sparking) {
@@ -511,13 +511,13 @@ class EpisodeRig {
       }
     }
 
-    // Bind actors + contact shadow blobs into the shared Pool
+    // Bind actors + contact shadow blobs into the shared Pool (high-res 480x800 character canvas so ink lines never break!)
     let ai = 0, fi = 0;
     const usedA: Actor[] = [], usedF: Fx[] = [];
     for (const p of places) {
       const a = this.actor(world.root, ai++);
       const sc = p.scale ?? 1;
-      a.r = pool.req(p.key, 300, 500, 0.5, p.draw);
+      a.r = pool.req(p.key, 480, 800, 0.8, p.draw);
       a.mesh.visible = true;
       a.mesh.position.set(p.x, p.y, p.z);
       a.mesh.rotation.set(0, Math.atan2(cam.position.x - p.x, cam.position.z - p.z), 0);
@@ -614,7 +614,7 @@ const makeEpisodeComp = (ep: EpId): React.FC => {
     const flash = f >= 130 && f < 134 ? [1, 0.75, 0.45, 0.2][f - 130] : 0;
     return (
       <AbsoluteFill style={{ background: "#cfe3f2" }}>
-        <ThreeCanvas width={1080} height={1920} dpr={0.35} shadows gl={{ antialias: false, stencil: false, powerPreference: "high-performance", toneMappingExposure: 1.0 }}
+        <ThreeCanvas width={1080} height={1920} dpr={0.65} shadows gl={{ antialias: false, stencil: false, powerPreference: "high-performance", toneMappingExposure: 1.0 }}
           camera={{ fov: 38, near: 0.2, far: 1500 }}>
           <EpInner ep={ep} kit={kit} shots={shots} shot={shot} />
         </ThreeCanvas>
