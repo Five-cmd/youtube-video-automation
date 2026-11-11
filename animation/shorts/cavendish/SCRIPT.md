@@ -12,7 +12,7 @@ Topic: **Gravitation** (major physics topic). Format: cartoon-3d-short skill, ~6
 - G is the least precisely known fundamental constant (CODATA relative uncertainty ~2e-5, far worse than other constants). (Wikipedia, "Gravitational constant")
 - A small fridge magnet holding paper up against the whole Earth's pull is the standard demonstration that gravity is the weakest force. (common physics teaching example)
 
-## Script (~228 words)
+## Script
 The man who weighed the entire planet was too shy to stay in the room with his own experiment.
 It's 1797, and Henry Cavendish, the richest and quietest scientist in London, has a strange wooden box in his garden shed.
 Inside, a six-foot rod hangs from a thin wire, with a little lead ball on each end.
