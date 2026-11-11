@@ -129,7 +129,7 @@ const vOf = (i: number) => (i * 7 + (i >> 2)) % 4;
 const seedOf = (i: number) => ((i * 5 + 3) % 7) + 1;
 /** drawing resolution by distance: [canvas w, h, scale from the 600 x 1000 design] */
 const tier = (d: number): [number, number, number] =>
-  d < 4.5 ? [480, 800, 0.8] : d < 14 ? [300, 500, 0.5] : [180, 300, 0.3];
+  d < 8.5 ? [480, 800, 0.8] : d < 18 ? [300, 500, 0.5] : [210, 350, 0.35];
 
 // ---------------- light ----------------
 const SUN = new THREE.Vector3(0.5, 0.75, -0.4).normalize();
