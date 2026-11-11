@@ -35,7 +35,8 @@ def next_comp():
 
 def description(slug: str) -> str:
     md = (HERE / "shorts" / slug / "SCRIPT.md").read_text(encoding="utf-8")
-    script = md.split("## Script", 1)[-1].split("\n## ", 1)[0].strip()
+    script_sec = md.split("## Script", 1)[-1].split("\n## ", 1)[0]
+    script = "\n".join(script_sec.splitlines()[1:]).strip()
     facts = md.split("## Facts", 1)[-1].split("\n## ", 1)[0]
     sources = sorted(set(re.findall(r"\(([^()]*(?:Wikipedia|archives|calculation|electromagnetism)[^()]*)\)", facts)))
     src = "\n".join(f"- {s}" for s in sources[:6])
