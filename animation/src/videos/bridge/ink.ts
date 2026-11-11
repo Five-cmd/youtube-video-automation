@@ -50,8 +50,8 @@ const DEF: Required<InkOptions> = {
   // round 2 (reviewer: "world outlines ~1.5x thicker, pure black on every silhouette"): widths x1.5 (creases follow
   // via creaseScale), pure near-black, far opacity 0.75 -> 0.95; fog tint of the ink 0.6 -> 0.3 (compMat fogInk)
   color: "#030303", strength: 1.0,
-  widthNear: 5.1, widthFar: 3.3, distNear: 6, distFar: 90, creaseScale: 0.8, // round 3: creases 0.64 -> 0.8 (building corners)
-  depthLo: 0.01, depthHi: 0.03, angleLo: 35, angleHi: 50, concaveGain: 0.7, // depth jumps from 1 %; creases from 35 deg (roof eaves)
+  widthNear: 5.5, widthFar: 3.6, distNear: 6, distFar: 90, creaseScale: 0.85,
+  depthLo: 0.008, depthHi: 0.025, angleLo: 32, angleHi: 48, concaveGain: 0.75,
   farOpacity: 0.95, fadeNear: 150, fadeFar: 450,
 };
 
@@ -123,7 +123,7 @@ varying vec2 vUv;
 // pixel steps along x and y, and their length in px
 const vec2 STEP[2] = vec2[2](vec2(1.0, 0.0), vec2(0.0, 1.0));
 const float SLEN[2] = float[2](1.0, 1.0);
-#define RMAX 3   // covers 5.1 px x pxScale 0.5 = 2.55 px at dpr 0.5 (+0.5 AA ramp)
+#define RMAX 4   // covers 5.5 px x pxScale 0.65 = 3.575 px at dpr 0.65 (+0.5 AA ramp)
 
 // textureLod: explicit LOD inside loops (nearest-filtered targets, no derivatives needed)
 float dist(sampler2D t, vec2 uv) { return -perspectiveDepthToViewZ(textureLod(t, uv, 0.0).x, cNear, cFar); }
@@ -318,7 +318,7 @@ export class InkPass extends Pass {
     this.maskRT.setSize(width, height);
     this.tmpRT.setSize(width, height);
     (this.maskMat.uniforms.texel.value as THREE.Vector2).set(1 / width, 1 / height);
-    this.maskMat.uniforms.pxScale.value = height / 1920; // widths are specified at 1080x1920
+    this.maskMat.uniforms.pxScale.value = Math.max(0.55, height / 1920); // never let world ink lines vanish below 1.8 px
   }
 
   override render(renderer: THREE.WebGLRenderer, inputBuffer: THREE.WebGLRenderTarget) {
