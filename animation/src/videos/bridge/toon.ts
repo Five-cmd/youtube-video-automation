@@ -71,7 +71,7 @@ export const townsfolk = (v = 0): Outfit => {
 
 export class Pen {
   g: CanvasRenderingContext2D;
-  ol = 12;
+  ol = 14;
   /** [angle, cx, cy] rotation about (cx, cy), optional post-translation [.., dx, dy] */
   rot: number[] | null = null;
   constructor(g: CanvasRenderingContext2D) { this.g = g; }
