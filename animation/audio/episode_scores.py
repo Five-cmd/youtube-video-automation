@@ -186,12 +186,15 @@ def build_cavendish_sfx(dur: float, v_ref: float) -> np.ndarray:
 
     # Giant 348-lb lead spheres heavy thud in Shot 4 (f455 = 15.17s)
     thud_t = tt(0.7)
-    thud = np.exp(-thud_t / 0.16) * np.sin(phase(52 * (1 - 0.25 * thud_t))) * 2.5 + G.clink(rr(), 950, 0.18) * 0.5
+    thud = np.exp(-thud_t / 0.16) * np.sin(phase(52 * (1 - 0.25 * thud_t))) * 2.5
     add_ev(15.15, thud, -5.0, -0.2)
+    add_ev(15.15, G.clink(rr(), 950, 0.18), -9.0, -0.2)
     add_ev(15.55, thud, -5.5, 0.25)
+    add_ev(15.55, G.clink(rr(), 950, 0.18), -9.5, 0.25)
 
     # Shed lock click & telescope brass slide in Shot 7 (24.5s)
-    add_ev(24.2, G.clink(rr(), 2200, 0.14) + G.creak(0.35, rr(), 90, 160, G.WOOD), -8.0, -0.2)
+    add_ev(24.2, G.clink(rr(), 2200, 0.14), -8.5, -0.2)
+    add_ev(24.22, G.creak(0.35, rr(), 90, 160, G.WOOD), -9.0, -0.2)
     # Torsion wire subtle metallic ticks during Shot 7-8 (28.0s - 34.5s)
     for k in range(10):
         add_ev(28.2 + k * 0.6, G.clink(rr(), 3100 + k * 90, 0.09), -13.0, 0.15)
@@ -199,7 +202,8 @@ def build_cavendish_sfx(dur: float, v_ref: float) -> np.ndarray:
     for f_cut in [285, 445, 690, 985, 1310, 1640, 1880]:
         add_ev(f_cut / 30.0 - 0.08, G.whoosh(0.5, rr(), 0.08, 350, 1900, 0.8, 0.15, 0.15), -12.0)
     # Magnet click on steel board in Shot 12 (48.0s)
-    add_ev(48.0, G.clink(rr(), 2800, 0.12) + G.push_thump(rr()) * 0.6, -8.0, 0.1)
+    add_ev(48.0, G.clink(rr(), 2800, 0.12), -8.0, 0.1)
+    add_ev(48.02, G.push_thump(rr()), -9.5, 0.1)
     # Tiptoe footsteps in Shot 15 (62.8s -> end)
     for k in range(10):
         add_ev(62.8 + k * 0.46, G.stroll_step(rr(), 0.2), -11.0, -0.3 + 0.06 * k)
@@ -323,8 +327,9 @@ def build_magdeburg_sfx(dur: float, v_ref: float) -> np.ndarray:
 
     # Brass hand pump suction strokes in Shot 4 (14.8s -> 18.2s)
     for k in range(6):
-        pump = G.whoosh(0.38, rr(), 0.18, 600, 2800, 0.7, 0.12, 0.3) + G.clink(rr(), 1900, 0.08) * 0.4
+        pump = G.whoosh(0.38, rr(), 0.18, 600, 2800, 0.7, 0.12, 0.3)
         add_ev(15.0 + k * 0.52, pump, -8.5, -0.25)
+        add_ev(15.02 + k * 0.52, G.clink(rr(), 1900, 0.08), -11.0, -0.25)
 
     # Whip cracks, horse hooves & rope strain in Shots 5-7 (19.5s -> 32.5s)
     for k in range(3):
