@@ -68,12 +68,11 @@ def build_audio(comp: str) -> Path:
     words = json.loads(words_json.read_text(encoding="utf-8"))
     spans = M.speech_spans(words)
 
-    # Synthesize original march/chamber score + SFX via music.py and sfx.py (cached in _cache/)
-    import music
-    import sfx
+    # Synthesize episode-specific original score + SFX (cached per CompId in _cache/)
+    from episode_scores import render_episode_score_and_sfx
 
-    m_raw = M.cached("music_raw", lambda: music.render(music.build(), ref=-20.0)[0])
-    s_raw = M.cached("sfx", lambda: sfx.render(v_ref)[0])
+    m_raw = M.cached(f"music_{comp}", lambda: render_episode_score_and_sfx(comp, dur, v_ref)[0])
+    s_raw = M.cached(f"sfx_{comp}", lambda: render_episode_score_and_sfx(comp, dur, v_ref)[1])
 
     m_fit = fit_len(m_raw, target_n)
     s_fit = fit_len(s_raw, target_n)
