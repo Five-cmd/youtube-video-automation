@@ -3084,6 +3084,8 @@ def get_upcoming_slots(days_ahead: int = 1) -> List[str]:
 
 
 def main() -> None:
+    print("[DISABLED] Legacy non-cartoon uploader is permanently disabled. Only the Cartoon 3D Shorts pipeline in animation/ is active.")
+    return
     # Step 1: Run the Closed-Loop Analytics Inspector & Self-Optimizer (with graceful fallback if quota is limited)
     try:
         tuned_params = run_auto_analytics_and_optimize()
