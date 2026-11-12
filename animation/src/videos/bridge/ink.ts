@@ -123,7 +123,7 @@ varying vec2 vUv;
 // pixel steps along x and y, and their length in px
 const vec2 STEP[2] = vec2[2](vec2(1.0, 0.0), vec2(0.0, 1.0));
 const float SLEN[2] = float[2](1.0, 1.0);
-#define RMAX 4   // covers 5.5 px x pxScale 0.65 = 3.575 px at dpr 0.65 (+0.5 AA ramp)
+#define RMAX 3   // covers up to 3.0 px at dpr 0.5 / pxScale 0.55
 
 // textureLod: explicit LOD inside loops (nearest-filtered targets, no derivatives needed)
 float dist(sampler2D t, vec2 uv) { return -perspectiveDepthToViewZ(textureLod(t, uv, 0.0).x, cNear, cFar); }
@@ -145,11 +145,10 @@ void main() {
 
   // characters, cards etc. (not in the world buffer) in front of this pixel: no world ink over them
   if (useMain > 0.5) {
-    float zm = dist(tMainDepth, vUv);
-    zm = min(zm, dist(tMainDepth, vUv + vec2(texel.x, 0.0)));
-    zm = min(zm, dist(tMainDepth, vUv - vec2(texel.x, 0.0)));
-    zm = min(zm, dist(tMainDepth, vUv + vec2(0.0, texel.y)));
-    zm = min(zm, dist(tMainDepth, vUv - vec2(0.0, texel.y)));
+    float dMin = min(textureLod(tMainDepth, vUv, 0.0).x,
+      min(min(textureLod(tMainDepth, vUv + vec2(texel.x, 0.0), 0.0).x, textureLod(tMainDepth, vUv - vec2(texel.x, 0.0), 0.0).x),
+          min(textureLod(tMainDepth, vUv + vec2(0.0, texel.y), 0.0).x, textureLod(tMainDepth, vUv - vec2(0.0, texel.y), 0.0).x)));
+    float zm = -perspectiveDepthToViewZ(dMin, cNear, cFar);
     if (zm < zc * 0.985 - 0.03) { gl_FragColor = vec4(0.0); return; }
   }
 
