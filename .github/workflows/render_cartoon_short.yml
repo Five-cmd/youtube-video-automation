@@ -87,9 +87,9 @@ jobs:
           if [ "${{ inputs.frames }}" = "BENCH" ]; then
             echo "CPUs=$(nproc)" && free -h
             T0=$(date +%s)
-            npx remotion render src/index.ts "${{ inputs.comp }}" out/bench.mp4 --frames=0-19 --codec h264 --crf 18 --scale=0.5 --image-format=jpeg --jpeg-quality=92 --gl=swangle --concurrency=4 --timeout=600000
+            npx remotion render src/index.ts "${{ inputs.comp }}" out/bench.mp4 --frames=0-19 --codec h264 --crf 18 --scale=0.5 --image-format=jpeg --jpeg-quality=92 --gl=swangle --concurrency=2 --timeout=600000
             T1=$(date +%s)
-            echo "BENCH_20_FRAMES_CONC4_SEC=$((T1 - T0))"
+            echo "BENCH_20_FRAMES_SEC=$((T1 - T0))"
           elif [ "${{ inputs.comp }}" = "ALL_4" ]; then
             for c in BridgeShort CavendishShort MagdeburgShort FaradayShort; do
               node scripts/cloud-stills.mjs "$c" "out/stills/${c}_" "${{ inputs.frames }}" "${{ inputs.scale }}"
