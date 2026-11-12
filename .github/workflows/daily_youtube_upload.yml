@@ -1,16 +1,15 @@
 name: Cartoon 3D Shorts - 4x Daily Auto Post
 
-# Posts ONE approved cartoon short per run, 4 runs a day (Bangkok 06:00 / 09:00 / 21:00 / 23:00).
-# Pipeline (all on GitHub's machines, nothing on the user's PC):
-#   pick next approved+unposted comp from animation/queue.json -> voice + -15 LUFS mix -> Remotion/three.js render
-#   -> frame-by-frame QA gate -> YouTube upload -> mark posted in queue.json.
-# If no approved short is waiting, the run exits after ~1 minute without rendering or touching the YouTube API.
+# Posts ONE approved cartoon short per run, 4 runs a day (Bangkok ~06:00 / 09:00 / 21:00 / 23:00).
+# Pipeline (100% on GitHub Actions using 10 parallel render workers -> ~45 min wall-clock per clip):
+#   plan -> parallel [audio + 10 render chunks] -> concat + 1080x1920 upscale + QA gate -> YouTube upload -> queue.json.
+# Crons trigger 10 minutes before the hour to avoid GitHub's :00 UTC cron backlog.
 on:
   schedule:
-    - cron: "0 21 * * *"   # render starts 04:00 BKK -> posts ~06:00 BKK
-    - cron: "0 0 * * *"    # render starts 07:00 BKK -> posts ~09:00 BKK
-    - cron: "0 12 * * *"   # render starts 19:00 BKK -> posts ~21:00 BKK
-    - cron: "0 14 * * *"   # render starts 21:00 BKK -> posts ~23:00 BKK
+    - cron: "50 20 * * *"   # render starts ~04:00 BKK -> posts ~04:45-06:00 BKK
+    - cron: "50 23 * * *"   # render starts ~07:00 BKK -> posts ~07:45-09:00 BKK
+    - cron: "50 11 * * *"   # render starts ~19:00 BKK -> posts ~19:45-21:00 BKK
+    - cron: "50 13 * * *"   # render starts ~21:00 BKK -> posts ~21:45-23:00 BKK
   workflow_dispatch:
 
 permissions:
@@ -21,81 +20,160 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  post:
+  plan:
     runs-on: ubuntu-22.04
-    timeout-minutes: 300
+    timeout-minutes: 10
+    outputs:
+      comp: ${{ steps.pick.outputs.comp }}
+      total_frames: ${{ steps.pick.outputs.total_frames }}
     defaults:
       run:
         working-directory: animation
     steps:
       - uses: actions/checkout@v4
-
       - name: Pick next approved short
         id: pick
-        run: echo "comp=$(python3 post_queue.py next)" >> "$GITHUB_OUTPUT"
+        run: |
+          C=$(python3 post_queue.py next)
+          echo "comp=$C" >> "$GITHUB_OUTPUT"
+          if [ -n "$C" ]; then
+            F=$(python3 post_queue.py frames "$C")
+            echo "total_frames=$F" >> "$GITHUB_OUTPUT"
+            echo "Selected $C ($F frames)"
+          else
+            echo "total_frames=0" >> "$GITHUB_OUTPUT"
+            echo "No approved, unposted short in queue.json. Nothing to do."
+          fi
 
-      - name: Nothing approved - stop here
-        if: steps.pick.outputs.comp == ''
-        run: echo "No approved, unposted short in queue.json. Nothing to do."
-
-      - uses: actions/setup-node@v4
-        if: steps.pick.outputs.comp != ''
-        with:
-          node-version: "20"
-
+  audio:
+    needs: plan
+    if: needs.plan.outputs.comp != ''
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: animation
+    steps:
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        if: steps.pick.outputs.comp != ''
         with:
           python-version: "3.12"
+      - name: Synthesize -15 LUFS episode audio master
+        run: |
+          sudo apt-get update && sudo apt-get install -y ffmpeg
+          pip install --quiet numpy scipy pillow edge-tts imageio-ffmpeg
+          python3 audio/make_short_audio.py "${{ needs.plan.outputs.comp }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: audio-${{ github.run_id }}
+          path: animation/out/${{ needs.plan.outputs.comp }}/mix.wav
+          retention-days: 1
 
-      - name: Install system + packages
-        if: steps.pick.outputs.comp != ''
+  render:
+    needs: plan
+    if: needs.plan.outputs.comp != ''
+    runs-on: ubuntu-22.04
+    timeout-minutes: 120
+    strategy:
+      fail-fast: true
+      matrix:
+        chunk: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+    defaults:
+      run:
+        working-directory: animation
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install system + Chromium + Remotion packages
         run: |
           sudo apt-get update
           sudo apt-get install -y ffmpeg libnss3 libdbus-1-3 libatk1.0-0 libgbm-dev libasound2 libxrandr2 \
             libxkbcommon-dev libxfixes3 libxcomposite1 libxdamage1 libatk-bridge2.0-0 libpango-1.0-0 libcairo2 libcups2
           npm install --no-audit --no-fund
-          pip install --quiet numpy scipy pillow edge-tts imageio-ffmpeg google-api-python-client google-auth
           bash scripts/fetch-kenney.sh public/bridge/kenney || true
           npx remotion browser ensure
-
-      - name: Voice + score + SFX, mastered to -15 LUFS
-        if: steps.pick.outputs.comp != ''
-        run: python3 audio/make_short_audio.py "${{ steps.pick.outputs.comp }}"
-
-      - name: Render picture (1080x1920) and mux audio
-        if: steps.pick.outputs.comp != ''
+      - name: Render frame slice ${{ matrix.chunk }}/10
         run: |
-          C="${{ steps.pick.outputs.comp }}"
-          npx remotion render src/index.ts "$C" out/picture.mp4 --codec h264 --crf 16 --scale=0.65 --image-format=jpeg --jpeg-quality=95 --gl=swangle --concurrency=2 --timeout=600000
-          ffmpeg -y -i out/picture.mp4 -i "out/$C/mix.wav" -map 0:v:0 -map 1:a:0 -vf "scale=1080:1920:flags=lanczos,unsharp=5:5:0.45:3:3:0.0" -c:v libx264 -preset slow -crf 16 -pix_fmt yuv420p -c:a aac -b:a 256k -shortest out/final.mp4
+          TOTAL=${{ needs.plan.outputs.total_frames }}
+          N_CHUNKS=10
+          CHUNK=${{ matrix.chunk }}
+          CHUNK_SIZE=$(( (TOTAL + N_CHUNKS - 1) / N_CHUNKS ))
+          START=$(( CHUNK * CHUNK_SIZE ))
+          END=$(( (CHUNK + 1) * CHUNK_SIZE - 1 ))
+          if [ "$END" -ge "$TOTAL" ]; then END=$(( TOTAL - 1 )); fi
+          echo "Rendering ${{ needs.plan.outputs.comp }} frames ${START}-${END} of ${TOTAL}"
+          npx remotion render src/index.ts "${{ needs.plan.outputs.comp }}" "out/chunk_${CHUNK}.mp4" \
+            --frames="${START}-${END}" --codec h264 --crf 14 --scale=0.5 --image-format=jpeg --jpeg-quality=95 \
+            --gl=swangle --concurrency=2 --timeout=600000
+      - uses: actions/upload-artifact@v4
+        with:
+          name: chunk-${{ github.run_id }}-${{ matrix.chunk }}
+          path: animation/out/chunk_${{ matrix.chunk }}.mp4
+          retention-days: 1
 
-      - name: QA gate (blocks the upload on black / frozen / white frames or missing audio)
-        if: steps.pick.outputs.comp != ''
+  publish:
+    needs: [plan, audio, render]
+    if: needs.plan.outputs.comp != ''
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: animation
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install FFmpeg & Python deps
+        run: |
+          sudo apt-get update && sudo apt-get install -y ffmpeg
+          pip install --quiet numpy pillow google-api-python-client google-auth
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: chunk-${{ github.run_id }}-*
+          path: animation/out/chunks
+          merge-multiple: true
+      - uses: actions/download-artifact@v4
+        with:
+          name: audio-${{ github.run_id }}
+          path: animation/out/${{ needs.plan.outputs.comp }}
+      - name: Concat chunks, upscale to 1080x1920 & mux -15 LUFS audio
+        run: |
+          C="${{ needs.plan.outputs.comp }}"
+          rm -f chunks.txt
+          for i in $(seq 0 9); do
+            F=$(find "$(pwd)/out/chunks" -name "chunk_${i}.mp4" -print -quit)
+            if [ -n "$F" ]; then
+              echo "file '$F'" >> chunks.txt
+            fi
+          done
+          ls -la out/chunks/ || true
+          cat chunks.txt
+          ffmpeg -y -f concat -safe 0 -i chunks.txt -i "out/$C/mix.wav" -map 0:v:0 -map 1:a:0 \
+            -vf "scale=1080:1920:flags=lanczos,unsharp=5:5:0.45:3:3:0.0" \
+            -c:v libx264 -preset slow -crf 16 -pix_fmt yuv420p -c:a aac -b:a 256k -shortest out/final.mp4
+      - name: QA gate (blocks upload on black / frozen / white frames or missing audio)
         env:
           QA_STRICT: "1"
         run: python3 scripts/short_qa.py out/final.mp4 out/qa
-
       - name: Upload to YouTube
-        if: steps.pick.outputs.comp != ''
         env:
           YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
           YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
           YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
-        run: python3 post_queue.py upload "${{ steps.pick.outputs.comp }}"
-
+        run: python3 post_queue.py upload "${{ needs.plan.outputs.comp }}"
       - name: Save queue state
-        if: steps.pick.outputs.comp != ''
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add queue.json
-          git diff --staged --quiet || (git commit -m "cartoon: posted ${{ steps.pick.outputs.comp }}" && git pull --rebase --autostash && git push)
-
+          git diff --staged --quiet || (git commit -m "cartoon: posted ${{ needs.plan.outputs.comp }}" && git pull --rebase --autostash && git push)
       - uses: actions/upload-artifact@v4
-        if: always() && steps.pick.outputs.comp != ''
+        if: always()
         with:
-          name: posted-${{ steps.pick.outputs.comp }}-${{ github.run_number }}
+          name: posted-${{ needs.plan.outputs.comp }}-${{ github.run_number }}
           path: |
             animation/out/final.mp4
             animation/out/qa/
