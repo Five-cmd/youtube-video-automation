@@ -6,7 +6,7 @@
 // two-tone Lambert/Phong materials, HD painted textures, and Pen 2D character cards on the NOINK layer).
 import React, { useEffect, useMemo, useState } from "react";
 import * as THREE from "three";
-import { AbsoluteFill, continueRender, delayRender, useCurrentFrame } from "remotion";
+import { AbsoluteFill, continueRender, delayRender, getInputProps, useCurrentFrame } from "remotion";
 import { ThreeCanvas } from "@remotion/three";
 import { useThree } from "@react-three/fiber";
 import { EffectComposer } from "@react-three/postprocessing";
@@ -603,6 +603,8 @@ const EpInner: React.FC<{ ep: EpId; kit: Kit; shots: EpShot[]; shot: EpShot }> =
   );
 };
 
+const epDprOverride = () => (getInputProps() as { post?: { dpr?: number } }).post?.dpr ?? 0.5;
+
 const makeEpisodeComp = (ep: EpId): React.FC => {
   const total = EP_FRAMES[ep];
   const shots = makeShots(total, [SX, SY, SZ], [PX, PY, PZ]);
@@ -614,7 +616,7 @@ const makeEpisodeComp = (ep: EpId): React.FC => {
     const flash = f >= 130 && f < 134 ? [1, 0.75, 0.45, 0.2][f - 130] : 0;
     return (
       <AbsoluteFill style={{ background: "#cfe3f2" }}>
-        <ThreeCanvas width={1080} height={1920} dpr={0.65} shadows gl={{ antialias: false, stencil: false, powerPreference: "high-performance", toneMappingExposure: 1.0 }}
+        <ThreeCanvas width={1080} height={1920} dpr={epDprOverride()} shadows gl={{ antialias: false, stencil: false, powerPreference: "high-performance", toneMappingExposure: 1.0 }}
           camera={{ fov: 38, near: 0.2, far: 1500 }}>
           <EpInner ep={ep} kit={kit} shots={shots} shot={shot} />
         </ThreeCanvas>
