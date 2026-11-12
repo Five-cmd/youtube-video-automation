@@ -33,6 +33,20 @@ def next_comp():
     return ""
 
 
+def comp_frames(comp: str) -> int:
+    if comp == "BridgeShort":
+        m = re.search(r"export const TOTAL\s*=\s*(\d+)", (HERE / "src/videos/bridge/story.ts").read_text(encoding="utf-8"))
+        if m:
+            return int(m.group(1))
+        return 2025
+    slug = comp.replace("Short", "").lower()
+    txt = (HERE / "src/videos/physics/PhysicsShort.tsx").read_text(encoding="utf-8")
+    m = re.search(rf"{slug}\s*:\s*(\d+)", txt)
+    if m:
+        return int(m.group(1))
+    raise SystemExit(f"Unknown frame count for {comp}")
+
+
 def description(slug: str) -> str:
     md = (HERE / "shorts" / slug / "SCRIPT.md").read_text(encoding="utf-8")
     script_sec = md.split("## Script", 1)[-1].split("\n## ", 1)[0]
@@ -82,5 +96,7 @@ if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else "next"
     if cmd == "next":
         print(next_comp())
+    elif cmd == "frames":
+        print(comp_frames(sys.argv[2]))
     elif cmd == "upload":
         upload(sys.argv[2], HERE / "out" / "final.mp4")
