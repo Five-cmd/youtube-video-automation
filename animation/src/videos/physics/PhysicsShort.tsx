@@ -273,15 +273,19 @@ class EpisodeRig {
         this.group.add(bar);
       }
       for (const y of [0.52, 1.4, 2.28, 3.18]) {
-        const topF = new THREE.Mesh(new THREE.BoxGeometry(2.64, 0.065, 0.065), mCopper);
-        topF.position.set(0, y, 1.12);
+        // Keep front face open above floor (0.52) and below roof (3.18) so bars NEVER block Faraday's face or body
+        if (y === 0.52 || y === 3.18) {
+          const topF = new THREE.Mesh(new THREE.BoxGeometry(2.64, 0.065, 0.065), mCopper);
+          topF.position.set(0, y, 1.12);
+          this.group.add(topF);
+        }
         const topB = new THREE.Mesh(new THREE.BoxGeometry(2.64, 0.065, 0.065), mCopper);
         topB.position.set(0, y, -1.12);
         const sideL = new THREE.Mesh(new THREE.BoxGeometry(0.065, 0.065, 2.32), mCopper);
         sideL.position.set(-1.28, y, 0);
         const sideR = new THREE.Mesh(new THREE.BoxGeometry(0.065, 0.065, 2.32), mCopper);
         sideR.position.set(1.28, y, 0);
-        this.group.add(topF, topB, sideL, sideR);
+        this.group.add(topB, sideL, sideR);
       }
       // Gold-leaf electroscope on a stand inside the cage
       const stand = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.09, 1.05, 10), mWood);
@@ -473,38 +477,84 @@ class EpisodeRig {
       this.leafL.rotation.z = 0; // Inside the Faraday cage, the gold leaves NEVER move!
       this.leafR.rotation.z = 0;
 
-      // Michael Faraday standing calmly inside the 12-foot cage
+      // Michael Faraday: steps into the cage early, breathes, tilts head, gestures to the electroscope, reacts calmly to the bolt
+      const stepIn = shot.id <= 2 ? clamp01((f - 30) / 75) : 1;
+      const fWalk = shot.id <= 2 && stepIn < 1;
+      const fPose = Math.floor(t * 8) % 8;
+      const fExpr: Expr = shot.id === 8 ? "grin" : shot.id >= 5 && shot.id <= 7 ? "relief" : "grin";
+      const fWave = shot.id === 1 || shot.id === 8 ? 0.55 + 0.25 * Math.sin(t * 6) : 0.25 + 0.15 * Math.sin(t * 3.5);
+      const fBob = fWalk ? 0 : 0.018 * Math.sin(t * 3.2);
       places.push({
-        key: `faraday|${blink(1) ? 1 : 0}`,
-        draw: (p) => bodyFront(p, FARADAY_OUTFIT, { mode: "stand", expr: "grin", blink: blink(1), wave: 0.3 }),
-        x: SX + 0.15, y: SY + 0.48, z: SZ,
+        key: `faraday|${fWalk ? "m" : "s"}|${fExpr}|${fPose}|${blink(1) ? 1 : 0}`,
+        draw: (p) => bodyFront(p, FARADAY_OUTFIT, {
+          mode: fWalk ? "stroll" : "stand",
+          phase: (t * 1.6) % 1,
+          expr: fExpr,
+          blink: blink(1),
+          wave: fWave,
+          headTilt: 0.06 * Math.sin(t * 2.4),
+          look: shot.id === 4 ? -0.5 : 0.2 * Math.sin(t * 1.7),
+        }),
+        x: SX + 0.75 - stepIn * 0.55,
+        y: SY + 0.48 + fBob,
+        z: SZ + (1 - stepIn) * 0.45,
       });
-      // Assistant cranking the lightning machine outside left
+      // Assistant actively cranking the lightning machine outside left (8 quantized phases for smooth motion)
+      const aPose = Math.floor(t * 10) % 8;
       places.push({
-        key: `assist|${Math.floor(t * 6) % 2}`,
-        draw: (p) => bodySide(p, OFFICER, { mode: "march", expr: sparking ? "shock" : "nervous", phase: (t * 2) % 1 }),
-        x: SX - 2.35, y: SY, z: SZ + 0.25,
+        key: `assist|${sparking ? 1 : 0}|${aPose}|${blink(2) ? 1 : 0}`,
+        draw: (p) => bodySide(p, OFFICER, {
+          mode: "march",
+          expr: sparking ? "shock" : "nervous",
+          phase: (t * 2.2) % 1,
+          blink: blink(2),
+        }),
+        x: SX - 2.35, y: SY + (sparking ? 0.02 * Math.abs(Math.sin(t * 8)) : 0), z: SZ + 0.25,
       });
-      // Audience stands in front of the cage (+Z = 1.48) with a small Z stagger so they NEVER intersect the copper bars at Z = 1.12!
+      // Audience stands clearly right & in front of the cage (no corner-post overlap!), ducks in shot 4 & jumps in shot 8
+      const ducking = shot.id === 4 || shot.id === 7;
+      const jumping = shot.id === 8 && f >= 995 && f < 1035;
+      const jumpY = jumping ? 0.22 * Math.abs(Math.sin((f - 995) * 0.25)) : 0;
       for (let i = 0; i < 3; i++) {
+        const audPose = Math.floor((t + i * 0.3) * 6) % 6;
+        const audExpr: Expr = jumping || sparking ? "shock" : "nervous";
         places.push({
-          key: `aud|${i}|${sparking ? 1 : 0}`,
-          draw: (p) => bodyFront(p, townsfolk(i + 1), { mode: "stand", expr: sparking ? "shock" : "nervous", blink: blink(i + 4) }),
-          x: SX + 1.05 + i * 0.62, y: SY, z: SZ + 1.48 + (i % 2) * 0.16,
+          key: `aud|${i}|${audExpr}|${audPose}|${blink(i + 4) ? 1 : 0}`,
+          draw: (p) => bodyFront(p, townsfolk(i + 1), {
+            mode: "stand",
+            expr: audExpr,
+            blink: blink(i + 4),
+            headTilt: ducking ? -0.14 : 0.06 * Math.sin(t * 2.8 + i),
+            look: -0.6,
+            wave: jumping ? 0.8 : undefined,
+          }),
+          x: SX + 1.58 + i * 0.56,
+          y: SY + jumpY - (ducking ? 0.14 : 0),
+          z: SZ + 1.58 + (i % 2) * 0.18,
+          scale: ducking ? 0.92 : 1,
         });
       }
       if (sparking) {
         fxList.push({ key: `spark|${f % 3}`, cw: 260, ch: 260, draw: (p) => fxStars(p, (f % 10) / 10), x: SX - 1.32, y: SY + 1.72, z: SZ + 0.35, w: 0.95, h: 0.95 });
       }
-      // Shots 11-12 Analogy: people in a small room backing up to the outer walls, leaving the middle empty
+      // Shots 11-12 Analogy: people in a small room actively backing away to the outer walls, leaving the middle empty
       if (shot.id === 11 || shot.id === 12) {
         const pushU = shot.id === 11 ? clamp01((f - shot.a) / 60) : 1.0;
         const rad = 0.45 + pushU * 0.95;
+        const walkingOut = shot.id === 11 && pushU < 0.95;
+        const rPose = Math.floor(t * 8) % 8;
         for (let i = 0; i < 8; i++) {
           const ang = (i / 8) * Math.PI * 2;
           places.push({
-            key: `roomChar|${i}|${blink(i) ? 1 : 0}`,
-            draw: (p) => bodyFront(p, townsfolk(i), { mode: "stand", expr: "stern", blink: blink(i) }),
+            key: `roomChar|${i}|${walkingOut ? "m" : "s"}|${rPose}|${blink(i) ? 1 : 0}`,
+            draw: (p) => bodyFront(p, townsfolk(i), {
+              mode: walkingOut ? "stroll" : "stand",
+              phase: (t * 1.5 + i * 0.2) % 1,
+              expr: "stern",
+              blink: blink(i),
+              headTilt: 0.08 * Math.sin(t * 2.2 + i),
+              look: i % 2 === 0 ? -0.5 : 0.5,
+            }),
             x: PX + Math.cos(ang) * rad, y: PY + 0.1, z: PZ + Math.sin(ang) * rad, scale: 0.85,
           });
         }
