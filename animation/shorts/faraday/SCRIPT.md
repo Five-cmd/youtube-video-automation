@@ -8,7 +8,7 @@ Topic: **Electromagnetism & Electrostatic Shielding** (major physics topic). For
 - Like charges repel according to Coulomb's / Gauss's law, distributing exclusively on the outer surface of a conductor so their interior fields cancel. (standard electromagnetism)
 
 ## Script
-Britain's greatest physicist built a twelve-foot metal cage, climbed inside, and ordered his assistant to blast it with lightning.
+He locked himself inside a metal cage and ordered his assistant: "Shoot me with lightning!"
 It's 1836 in London, and Michael Faraday is standing inside a giant box wrapped in copper wire and tinfoil in a packed lecture hall.
 Outside the box sits a hand-cranked lightning machine taller than a man.
 His assistant spins the glass wheel, sparks hiss into the air, and the front row ducks behind their hats.
