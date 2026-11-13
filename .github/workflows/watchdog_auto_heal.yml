@@ -1,0 +1,113 @@
+name: Watchdog - Auto Healer & Retry
+
+# Runs automatically on GitHub Actions every 2 hours (or manually).
+# Completely autonomous: works when PC is turned off, uses ZERO AI tokens.
+# Diagnoses why a scheduled Short did not post, fixes the state, and forces publication.
+
+on:
+  schedule:
+    # Check at 00:15, 04:15, 08:15, 12:15, 16:15, 20:15 UTC (offsets avoid peak lag)
+    - cron: "15 */4 * * *"
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: write
+
+jobs:
+  watchdog:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: pip install --quiet requests google-api-python-client google-auth
+      - name: Inspect queue and heal pipeline
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ github.event.repository.name }}
+          YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
+          YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
+          YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
+        run: |
+          python3 - << 'EOF'
+          import os, sys, json, requests
+          from datetime import datetime, timezone
+
+          gh_token = os.environ.get("GH_TOKEN")
+          owner = os.environ.get("OWNER")
+          repo = os.environ.get("REPO")
+          H = {"Authorization": f"Bearer {gh_token}", "Accept": "application/vnd.github+json"}
+
+          # 1. Read queue.json
+          with open("animation/queue.json", "r", encoding="utf-8") as f:
+              q = json.load(f)
+
+          unposted = [s for s in q.get("shorts", []) if s.get("approved") and not s.get("posted")]
+          if not unposted:
+              print("Watchdog: All approved shorts are already posted. Nothing pending.")
+              sys.exit(0)
+
+          target = unposted[0]
+          print(f"Watchdog: Target unposted short is '{target['comp']}' (title: {target['title']})")
+
+          # 2. Check recent runs of daily_youtube_upload.yml
+          wf_url = f"https://api.github.com/repos/{owner}/{repo}/actions/workflows/daily_youtube_upload.yml/runs?per_page=5"
+          r = requests.get(wf_url, headers=H)
+          if r.status_code != 200:
+              print(f"Failed to fetch runs: {r.status_code}")
+              sys.exit(1)
+
+          runs = r.json().get("workflow_runs", [])
+          if not runs:
+              print("No runs found. Dispatching new run...")
+              disp = requests.post(f"https://api.github.com/repos/{owner}/{repo}/actions/workflows/daily_youtube_upload.yml/dispatches", headers=H, json={"ref": "main"})
+              print(f"Dispatched: {disp.status_code}")
+              sys.exit(0)
+
+          latest = runs[0]
+          status = latest.get("status")
+          conclusion = latest.get("conclusion")
+          run_id = latest.get("id")
+          created_at = datetime.fromisoformat(latest.get("created_at").replace("Z", "+00:00"))
+          age_min = (datetime.now(timezone.utc) - created_at).total_seconds() / 60
+
+          print(f"Latest run {run_id}: status={status}, conclusion={conclusion}, age={age_min:.1f} mins")
+
+          # If the run is in progress and reasonable age (< 75 mins), let it finish
+          if status == "in_progress" and age_min < 75:
+              print(f"Run {run_id} is actively working on Cloud ({age_min:.1f}m old). Watchdog will monitor.")
+              sys.exit(0)
+
+          # If run is hung (> 75 mins in_progress)
+          if status == "in_progress" and age_min >= 75:
+              print(f"Run {run_id} appears hung ({age_min:.1f}m old). Cancelling it...")
+              requests.post(f"https://api.github.com/repos/{owner}/{repo}/actions/runs/{run_id}/cancel", headers=H)
+
+          # If latest run failed or was cancelled, check why and heal
+          if conclusion in ("failure", "cancelled") or status == "completed" or (status == "in_progress" and age_min >= 75):
+              print(f"Healing pipeline: re-running or triggering fresh run for '{target['comp']}'...")
+              
+              # First try rerun-failed-jobs if artifacts still exist and only publish failed
+              jobs_url = f"https://api.github.com/repos/{owner}/{repo}/actions/runs/{run_id}/jobs"
+              jr = requests.get(jobs_url, headers=H)
+              jobs = jr.json().get("jobs", [])
+              pub_jobs = [j for j in jobs if j["name"] == "publish" and j["conclusion"] == "failure"]
+              render_jobs_ok = all(j["conclusion"] == "success" for j in jobs if j["name"].startswith("render"))
+
+              if pub_jobs and render_jobs_ok and age_min < 240:
+                  print("Render chunks were all successful! Rerunning failed publish job...")
+                  rf = requests.post(f"https://api.github.com/repos/{owner}/{repo}/actions/runs/{run_id}/rerun-failed-jobs", headers=H)
+                  if rf.status_code == 201:
+                      print("Successfully triggered rerun-failed-jobs!")
+                      sys.exit(0)
+
+              # Otherwise dispatch clean new run
+              print("Triggering fresh workflow dispatch...")
+              disp = requests.post(f"https://api.github.com/repos/{owner}/{repo}/actions/workflows/daily_youtube_upload.yml/dispatches", headers=H, json={"ref": "main"})
+              print(f"Dispatch status: {disp.status_code}")
+          EOF
