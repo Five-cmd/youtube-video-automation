@@ -8,7 +8,7 @@ Topic: **Mechanical Resonance** (major physics topic). Format: cartoon-3d-short 
 - Nobody killed, 20 injured; British Army then ordered troops to "break step" on bridges. (same)
 
 ## Script
-Seventy-four soldiers knocked down an iron bridge just by walking across it.
+Why is the British Army legally banned from marching in step across any bridge? Seventy-four soldiers found out the hard way.
 It's 1831, and the brand new bridge over the river is the pride of the whole town.
 The men are marching home four across, every boot hitting the planks at the exact same moment.
 Halfway over, the bridge starts bouncing under their feet.
