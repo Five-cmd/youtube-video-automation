@@ -3,6 +3,7 @@
 import * as THREE from "three";
 import { NOINK } from "../../bridge/ink";
 import { twoTone } from "../../bridge/shade";
+import { enrichExtraEnvironment } from "./extraEnvironments";
 import {
   Pen,
   INK,
@@ -226,6 +227,7 @@ export function buildBatch2Props(
     analogyGroup.add(starSphere);
   }
 
+  enrichExtraEnvironment(ep, stageGroup, mats);
   return rig;
 }
 

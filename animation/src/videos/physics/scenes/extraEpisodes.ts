@@ -17,6 +17,7 @@ import {
   Expr,
 } from "../../bridge/toon";
 import { V3, FPS, clamp01 } from "../../bridge/story";
+import { enrichExtraEnvironment } from "./extraEnvironments";
 
 export type ExtraEpId = "pascal" | "doppler" | "curie";
 
@@ -311,6 +312,7 @@ export function buildExtraProps(
     }
   }
 
+  enrichExtraEnvironment(ep, stageGroup, mats);
   return rig;
 }
 
