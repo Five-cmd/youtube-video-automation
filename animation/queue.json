@@ -97,6 +97,48 @@
       "title": "The Shed That Glowed Blue in the Dark #physics #science",
       "approved": true,
       "posted": false
+    },
+    {
+      "comp": "FoucaultShort",
+      "slug": "foucault",
+      "title": "The Giant Pendulum That Proved Earth Spins Under Your Feet #physics #earth",
+      "approved": true,
+      "posted": false
+    },
+    {
+      "comp": "HertzShort",
+      "slug": "hertz",
+      "title": "The Invisible Spark That Invented Radio #physics #radio",
+      "approved": true,
+      "posted": false
+    },
+    {
+      "comp": "BernoulliShort",
+      "slug": "bernoulli",
+      "title": "Why Air Speed Makes Heavy Airplanes Fly #physics #aviation",
+      "approved": true,
+      "posted": false
+    },
+    {
+      "comp": "HookeShort",
+      "slug": "hooke",
+      "title": "The Tiny Lens That Exposed a Monster Jungle in Water #physics #biology",
+      "approved": true,
+      "posted": false
+    },
+    {
+      "comp": "HomopolarShort",
+      "slug": "homopolar",
+      "title": "The Spinning Wire That Built Every Electric Motor #physics #electricity",
+      "approved": true,
+      "posted": false
+    },
+    {
+      "comp": "BlackbodyShort",
+      "slug": "blackbody",
+      "title": "Why Hot Iron Glows Red, White, Then Blue #physics #quantum",
+      "approved": true,
+      "posted": false
     }
   ]
 }
