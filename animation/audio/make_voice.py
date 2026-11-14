@@ -28,6 +28,12 @@ VOICE_MAP = {
     "pascal": "en-US-AndrewMultilingualNeural",
     "doppler": "en-US-AndrewMultilingualNeural",
     "curie": "en-US-AndrewMultilingualNeural",
+    "foucault": "en-US-AndrewMultilingualNeural",
+    "hertz": "en-US-AndrewMultilingualNeural",
+    "bernoulli": "en-US-AndrewMultilingualNeural",
+    "hooke": "en-US-AndrewMultilingualNeural",
+    "homopolar": "en-US-AndrewMultilingualNeural",
+    "blackbody": "en-US-AndrewMultilingualNeural",
 }
 
 
