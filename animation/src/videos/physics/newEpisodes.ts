@@ -20,6 +20,7 @@ import {
   Expr,
 } from "../bridge/toon";
 import { V3, FPS, clamp01, V } from "../bridge/story";
+import { MOON_Y, buildGalileoPisaPiazza, buildGalileoMoonDome } from "./scenes/galileoScene";
 
 export type NewEpId = "galileo" | "archimedes" | "newton" | "franklin" | "tesla" | "rontgen";
 
@@ -187,6 +188,7 @@ export interface NewEpRig {
   marbleBall: THREE.Mesh;
   featherMesh: THREE.Group;
   airStreams: THREE.Mesh[];
+  moonGroup: THREE.Group;
   moonBackdrop: THREE.Mesh;
   moonEarth: THREE.Mesh;
   moonHammer: THREE.Group;
@@ -291,8 +293,8 @@ export function buildNewShots(ep: NewEpId, stage: V3, park: V3): EpShot[] {
       S(12, "golden", 8, [px + 0.4, py + 1.9, pz - 6.0], [px, py + 1.35, pz], [px + 0.1, py + 1.25, pz - 5.0], [px, py + 1.0, pz], { kickAt: 1528 }),
       // S13: Feather held up by rising air flutter vs fast-dropping bowling ball
       S(13, "golden", 9, [px - 0.6, py + 1.8, pz - 5.4], [px + 0.1, py + 1.55, pz], [px - 0.2, py + 1.7, pz - 4.7], [px + 0.1, py + 1.45, pz]),
-      // S14: MOON STAGE — hammer and feather fall slowly in lockstep to hit lunar dust together!
-      S(14, "day", 9, [px + MX_OFF - 0.4, py + 1.85, pz + MZ_OFF - 5.6], [px + MX_OFF, py + 1.25, pz + MZ_OFF], [px + MX_OFF + 0.2, py + 1.45, pz + MZ_OFF - 4.5], [px + MX_OFF, py + 0.95, pz + MZ_OFF], { kickAt: 1835 }),
+      // S14: MOON STAGE — true 360-deg starry lunar dome at y=MOON_Y with Earth rising behind hammer & feather!
+      S(14, "day", 9, [-0.4, MOON_Y + 1.85, -5.6], [0.15, MOON_Y + 1.3, 0], [0.2, MOON_Y + 1.5, -4.5], [0.15, MOON_Y + 1.0, 0], { fov: 46, kickAt: 1835 }),
       // S15: Callback hero pose back in front of the whole Leaning Tower of Pisa!
       S(15, "day", 6, [sx - 0.4, sy + 2.0, sz + 6.8], [sx - 0.3, sy + 1.85, sz - 0.6], [sx + 0.4, sy + 2.6, sz + 9.2], [sx - 0.4, sy + 2.0, sz - 0.8], { fov: 46 }),
     ];
@@ -411,6 +413,7 @@ function makeBlankRig(mats: Mats): NewEpRig {
     marbleBall: mk(),
     featherMesh: mg(),
     airStreams: [],
+    moonGroup: mg(),
     moonBackdrop: mk(),
     moonEarth: mk(),
     moonHammer: mg(),
@@ -469,21 +472,8 @@ export function buildNewEpisodeProps(
   const mWater = twoTone(new THREE.MeshPhongMaterial({ color: "#55b8db", specular: "#ffffff", shininess: 90, transparent: true, opacity: 0.72 }), 0.15);
 
   if (ep === "galileo") {
-    // Leaning Pisa Tower cleanly positioned left-back (-1.35, 0, -1.55) with top stone railing balcony at y=4.35
-    rig.towerGroup.position.set(-1.35, 0, -1.55);
-    rig.towerGroup.rotation.z = -0.075;
-    for (let tier = 0; tier < 3; tier++) {
-      const cyl = new THREE.Mesh(new THREE.CylinderGeometry(0.72 - tier * 0.04, 0.76 - tier * 0.04, 1.45, 20), mats.paper);
-      cyl.position.y = 0.72 + tier * 1.45;
-      const rim = new THREE.Mesh(new THREE.CylinderGeometry(0.8 - tier * 0.04, 0.8 - tier * 0.04, 0.12, 20), mats.stone);
-      rim.position.y = 1.44 + tier * 1.45;
-      rig.towerGroup.add(cyl, rim);
-    }
-    const railRing = new THREE.Mesh(new THREE.TorusGeometry(0.7, 0.045, 8, 20), mats.stone);
-    railRing.rotation.x = Math.PI / 2;
-    railRing.position.y = 4.65;
-    rig.towerGroup.add(railRing);
-    stageGroup.add(rig.towerGroup);
+    // Modular 1589 Pisa Cathedral Piazza + 6-tier Leaning Tower
+    rig.towerGroup = buildGalileoPisaPiazza(stageGroup, mats);
 
     // Cannonballs positioned CLEAR of the tower cylinder (x >= -0.35!) + speed trails
     rig.ballHeavy = new THREE.Mesh(new THREE.SphereGeometry(0.27, 20, 16), mats.iron);
@@ -517,28 +507,12 @@ export function buildNewEpisodeProps(
     }
     analogyGroup.add(topBar, rig.bowlBall, rig.marbleBall, rig.featherMesh);
 
-    // Moon Stage (dark sky backdrop + glowing blue Earth + crater disc + silver hammer + feather)
-    const spaceMat = twoTone(new THREE.MeshLambertMaterial({ color: "#121726" }));
-    rig.moonBackdrop = new THREE.Mesh(new THREE.BoxGeometry(7.2, 5.2, 0.15), spaceMat);
-    rig.moonBackdrop.position.set(MX_OFF, 2.5, MZ_OFF + 2.4);
-    rig.moonEarth = new THREE.Mesh(new THREE.SphereGeometry(0.45, 16, 12), mBlue);
-    rig.moonEarth.position.set(MX_OFF - 1.5, 3.2, MZ_OFF + 1.8);
-    const moonPad = new THREE.Mesh(new THREE.CylinderGeometry(2.6, 2.8, 0.22, 24), mMoon);
-    moonPad.position.set(MX_OFF, 0.11, MZ_OFF);
-    for (const [cx, cz, cr] of [[-0.9, -0.4, 0.38], [0.85, 0.3, 0.28], [0.1, -1.0, 0.45]]) {
-      const rim = new THREE.Mesh(new THREE.TorusGeometry(cr, 0.06, 8, 16), mats.stone);
-      rim.rotation.x = Math.PI / 2;
-      rim.position.set(MX_OFF + cx, 0.23, MZ_OFF + cz);
-      analogyGroup.add(rim);
-    }
-    const hStick = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.45, 8), mats.wood);
-    const hHead = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.1, 0.1), mSilver);
-    hHead.position.y = 0.2;
-    rig.moonHammer.add(hStick, hHead);
-    const mfShaft = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.02, 0.4, 8), mats.paper);
-    const mfPlume = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.32, 0.03), mats.paper);
-    rig.moonFeather.add(mfShaft, mfPlume);
-    analogyGroup.add(rig.moonBackdrop, rig.moonEarth, moonPad, rig.moonHammer, rig.moonFeather);
+    // True 3D Lunar Vacuum Dome at y = MOON_Y
+    const moon = buildGalileoMoonDome(stageGroup.parent ?? stageGroup, mats);
+    rig.moonGroup = moon.moonGroup;
+    rig.moonEarth = moon.moonEarth;
+    rig.moonHammer = moon.moonHammer;
+    rig.moonFeather = moon.moonFeather;
   }
 
   if (ep === "archimedes") {
@@ -928,13 +902,12 @@ export function updateNewEpisode(
       });
     }
 
-    // Moon Crater Stage (Shot 14): Hammer & Feather drop in 1/6g lockstep!
-    rig.moonBackdrop.visible = shot.id === 14;
-    rig.moonEarth.visible = shot.id === 14;
+    // Moon Crater Stage (Shot 14): True 360-deg Lunar Dome — Hammer & Feather drop in 1/6g lockstep!
+    rig.moonGroup.visible = shot.id === 14;
     const moonU = shot.id === 14 ? clamp01((f - shot.a - 15) / 68) ** 2 : 0;
-    const moonY = 2.15 - moonU * 1.78;
-    rig.moonHammer.position.set(MX_OFF - 0.35, moonY, MZ_OFF);
-    rig.moonFeather.position.set(MX_OFF + 0.35, moonY, MZ_OFF);
+    const moonY = 2.15 - moonU * 1.92;
+    rig.moonHammer.position.set(-0.35, moonY, 0);
+    rig.moonFeather.position.set(0.35, moonY, 0);
     if (shot.id === 14) {
       if (f >= 1835 && f < 1875) {
         fxList.push({
@@ -942,9 +915,9 @@ export function updateNewEpisode(
           cw: 240,
           ch: 240,
           draw: (p) => fxBurst(p, 0.45),
-          x: PX + MX_OFF,
-          y: PY + 0.45,
-          z: PZ + MZ_OFF + 0.2,
+          x: 0,
+          y: MOON_Y + 0.35,
+          z: 0.2,
           w: 1.7,
           h: 1.2,
         });
@@ -952,9 +925,9 @@ export function updateNewEpisode(
       places.push({
         key: `astro|${pose}|${blink(8) ? 1 : 0}`,
         draw: (p) => bodyFront(p, ASTRONAUT_KID, { mode: "stand", expr: "grin", blink: blink(8), wave: 0.75 }),
-        x: PX + MX_OFF + 1.15,
-        y: PY + 0.22 + 0.08 * Math.abs(Math.sin(t * 2.5)),
-        z: PZ + MZ_OFF + 0.2,
+        x: 1.05,
+        y: MOON_Y + 0.02 + 0.08 * Math.abs(Math.sin(t * 2.5)),
+        z: 0.2,
         scale: 0.9,
       });
     }
