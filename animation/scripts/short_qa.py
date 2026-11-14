@@ -47,7 +47,17 @@ diff = np.abs(np.diff(F.astype(np.int16), axis=0)).mean(axis=(1, 2, 3))
 med = np.array([np.median(diff[max(0, i - 8):i + 9]) for i in range(len(diff))])
 pops = [i + 1 for i in range(len(diff)) if diff[i] > 3 * med[i] + 1.0 and (i + 1) not in planned]
 black = [i for i in range(n) if stats["mean"][i] < 0.04]
-white = [i for i in range(n) if stats["mean"][i] > 0.93 and i not in planned]
+raw_white = [i for i in range(n) if stats["mean"][i] > 0.93 and i not in planned]
+white_spans = []
+for idx in raw_white:
+    if white_spans and idx == white_spans[-1][1] + 1:
+        white_spans[-1][1] = idx
+    else:
+        white_spans.append([idx, idx])
+# A single <=3-frame flash cut (e.g. dynamic hookEnd transition) is allowed; longer or repeated whiteouts fail.
+short_flashes = [sp for sp in white_spans if sp[1] - sp[0] + 1 <= 3]
+allowed_flash_frames = set(range(short_flashes[0][0], short_flashes[0][1] + 1)) if len(short_flashes) == 1 else set()
+white = [i for i in raw_white if i not in allowed_flash_frames]
 frozen, run_start = [], None
 for i in range(len(diff)):
     if diff[i] < 0.01:
