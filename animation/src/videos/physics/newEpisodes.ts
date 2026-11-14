@@ -21,6 +21,9 @@ import {
 } from "../bridge/toon";
 import { V3, FPS, clamp01 } from "../bridge/story";
 import { MOON_Y, buildGalileoPisaPiazza, buildGalileoMoonDome } from "./scenes/galileoScene";
+import { buildFranklinPiazza } from "./scenes/franklinScene";
+import { buildTeslaWardenclyffe } from "./scenes/teslaScene";
+import { buildRontgenLab } from "./scenes/rontgenScene";
 
 export type NewEpId = "galileo" | "archimedes" | "newton" | "franklin" | "tesla" | "rontgen";
 
@@ -612,6 +615,7 @@ export function buildNewEpisodeProps(
     rig.rodBolt.layers.set(NOINK);
 
     stageGroup.add(shedRoof, rig.kiteGroup, rig.kiteString.mesh, key, rig.franklinSpark, rig.leydenJar, rig.zapBall, rod, rig.rodBolt);
+    buildFranklinPiazza(stageGroup, mats);
 
     // Park analogy: bright red carpet + shiny brass doorknob post + static shock spark!
     const rug = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.08, 1.6), mats.red);
@@ -652,6 +656,7 @@ export function buildNewEpisodeProps(
     rig.moneyBag = new THREE.Mesh(new THREE.SphereGeometry(0.22, 12, 10), mGold);
     rig.moneyBag.position.set(0.35, 1.15, 0.4);
     stageGroup.add(rig.teslaTower, rig.moneyBag);
+    buildTeslaWardenclyffe(stageGroup, rig.teslaTower, mats);
 
     // Park analogy: Twin tall gleaming brass tuning forks + resonance wave rings + wireless charging phone
     const mkFork = (x: number) => {
@@ -705,6 +710,7 @@ export function buildNewEpisodeProps(
     rig.bonesOverlay = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.65, 0.45), boneMat);
     rig.bonesOverlay.position.set(1.08, 1.35, -0.35);
     rig.bonesOverlay.layers.set(NOINK);
+    buildRontgenLab(stageGroup, rig.bonesOverlay, mats);
 
     const beamMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(0.4, 2.0, 0.9) });
     rig.xrayBeam = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.26, 1.85, 12), beamMat);
