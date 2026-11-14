@@ -243,6 +243,13 @@ def main() -> int:
         print(f"No runs found. Dispatched new run: {disp.status_code}")
         return 0
 
+    for r in runs[:5]:
+        rs = r.get("status")
+        r_age = (datetime.now(timezone.utc) - datetime.fromisoformat(r["created_at"].replace("Z", "+00:00"))).total_seconds() / 60
+        if rs in ("queued", "pending", "waiting") or (rs == "in_progress" and r_age < 75):
+            print(f"Run {r['id']} is already active/waiting ({rs}, {r_age:.1f}m). Watchdog standing by.")
+            return 0
+
     latest = runs[0]
     status = latest.get("status")
     conclusion = latest.get("conclusion")
@@ -251,10 +258,6 @@ def main() -> int:
     age_min = (datetime.now(timezone.utc) - created_at).total_seconds() / 60
 
     print(f"Latest run {run_id}: status={status}, conclusion={conclusion}, age={age_min:.1f} mins")
-
-    if status == "queued" or (status == "in_progress" and age_min < 75):
-        print(f"Run {run_id} is active ({status}, {age_min:.1f}m). Watchdog standing by.")
-        return 0
 
     if status == "in_progress" and age_min >= 75:
         print(f"Run {run_id} hung ({age_min:.1f}m). Cancelling...")
