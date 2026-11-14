@@ -555,32 +555,31 @@ def build_thematic_music(dur: float, cfg: dict) -> np.ndarray:
 
         # Bass pulse on downbeats
         if bi % 2 == 0:
-            b.add("bass", I.tuba(F(ch[0] - 24), 0.72, r(), dur=beat * 1.6), t, p=-0.1, g=0.8)
+            b.add("bass", I.brass(F(ch[0] - 24), beat * 1.6, 0.72, r(), kind="tuba"), t, p=-0.1, g=0.8)
 
         # Warm harmonic pad per bar
         if bi % 4 == 0:
-            for c_idx, n_m in enumerate(ch):
-                b.add("pad", I.strings_pad(F(n_m), 0.35, r(), dur=beat * 3.8), t, p=(c_idx - 1) * 0.25, g=0.45)
+            b.add("pad", I.pad([F(n_m) for n_m in ch], beat * 3.8, 0.45, r()), t, p=0.0, g=0.55)
 
         # Distinct lead + counter texture per episode genre
         if inst == "flute_lute":
-            b.add("lead", I.glock(F(note_m), 0.65, r(), dur=beat * 0.8), t, p=0.15, g=0.7)
-            b.add("pluck", I.pizz(F(ch[bi % 3]), 0.6, r()), t + beat * 0.5, p=-0.35, g=0.55)
+            b.add("lead", I.fife(F(note_m), beat * 0.75, 0.62, r()), t, p=0.15, g=0.65)
+            b.add("pluck", I.pluck(F(ch[bi % 3]), 0.6, r(), dur=beat * 0.8), t + beat * 0.5, p=-0.35, g=0.55)
         elif inst == "lyre_perc":
-            b.add("pluck", I.harpsi(F(note_m), 0.8, r(), dur=beat * 0.55), t, p=0.2, g=0.75)
+            b.add("pluck", I.pluck(F(note_m), 0.75, r(), dur=beat * 0.6, bright=0.7), t, p=0.2, g=0.75)
             b.add("perc", I.snare(0.55, r()), t, p=-0.25, g=0.45 if bi % 2 == 0 else 0.22)
         elif inst == "cello_harp":
-            b.add("lead", I.strings_pad(F(note_m - 12), 0.75, r(), dur=beat * 1.1), t, p=0.0, g=0.65)
-            b.add("pluck", I.pizz(F(ch[(bi + 1) % 3] + 12), 0.55, r()), t + beat * 0.5, p=0.35, g=0.5)
+            b.add("lead", I.brass(F(note_m - 12), beat * 1.1, 0.65, r(), kind="horn"), t, p=0.0, g=0.6)
+            b.add("pluck", I.pluck(F(ch[(bi + 1) % 3] + 12), 0.55, r(), dur=beat * 0.7), t + beat * 0.5, p=0.35, g=0.5)
         elif inst == "storm_brass":
             if bi % 2 == 0:
-                b.add("brass", I.horn(F(note_m - 12), 0.75, r(), dur=beat * 1.3), t, p=-0.2, g=0.7)
+                b.add("brass", I.brass(F(note_m - 12), beat * 1.3, 0.75, r(), kind="horn"), t, p=-0.2, g=0.7)
             b.add("perc", I.timpani(F(ch[0] - 24), 0.7, r()), t, p=0.15, g=0.55 if bi % 4 == 0 else 0.25)
         elif inst == "synth_arp":
-            b.add("spark", I.vibra(F(note_m), 0.72, r(), dur=beat * 0.45), t, p=0.3 * math.sin(bi), g=0.75)
-            b.add("pluck", I.harpsi(F(ch[bi % 3] + 12), 0.5, r(), dur=beat * 0.35), t + beat * 0.5, p=-0.3, g=0.6)
+            b.add("spark", I.vibes(F(note_m), 0.72, r(), dur=beat * 0.45), t, p=0.3 * math.sin(bi), g=0.75)
+            b.add("pluck", I.musicbox(F(ch[bi % 3] + 12), 0.55, r(), dur=beat * 0.4), t + beat * 0.5, p=-0.3, g=0.6)
         else:  # glass_pad
-            b.add("bell", I.vibra(F(note_m), 0.65, r(), dur=beat * 1.4), t, p=0.25, g=0.65)
+            b.add("bell", I.vibes(F(note_m), 0.65, r(), dur=beat * 1.4), t, p=0.25, g=0.65)
             b.add("spark", I.glock(F(ch[bi % 3] + 24), 0.35, r(), dur=beat * 0.7), t + beat * 0.5, p=-0.25, g=0.45)
 
     return render_band(b, ref=-20.0)
@@ -604,28 +603,28 @@ def build_thematic_sfx(dur: float, v_ref: float, sfx_kind: str) -> np.ndarray:
     place(out, fades(st(bed), 0.4, 0.5), 0.0)
 
     if sfx_kind == "cannonball":
-        add_ev(4.3, G.thump(rr(), 1.0, 58.0), -3.5, 0.0)  # Hook flash
-        add_ev(33.2, G.thump(rr(), 1.2, 48.0), -1.5, -0.15)  # Heavy ball boom
-        add_ev(33.22, G.thump(rr(), 0.9, 68.0), -2.0, 0.15)  # Light ball simultaneous boom
+        add_ev(4.3, G.hammer_hit(rr(), 1.1), -3.5, 0.0)  # Hook flash
+        add_ev(33.2, G.hammer_hit(rr(), 1.5), -1.5, -0.15)  # Heavy ball boom
+        add_ev(33.22, G.hammer_hit(rr(), 1.0), -2.0, 0.15)  # Light ball simultaneous boom
     elif sfx_kind == "splash":
-        add_ev(4.3, G.water_splash(rr(), 0.7), -4.5, 0.0)
-        add_ev(22.5, G.water_splash(rr(), 1.1), -2.5, 0.0)   # Tub overflow
-        add_ev(33.2, G.water_splash(rr(), 1.0), -2.5, 0.1)   # Crown dunk
+        add_ev(4.3, G.splash_big(rr()), -4.5, 0.0)
+        add_ev(22.5, G.splash_big(rr()), -2.5, 0.0)   # Tub overflow
+        add_ev(33.2, G.splash_big(rr()), -2.5, 0.1)   # Crown dunk
     elif sfx_kind == "apple":
-        add_ev(4.3, G.thump(rr(), 0.8, 95.0), -4.5, 0.0)
-        add_ev(14.5, G.thump(rr(), 1.0, 110.0), -3.0, 0.1)   # Apple bonk
-        add_ev(33.2, G.whip(rr(), 1.0), -3.0, 0.0)           # Orbit cannon whoosh
+        add_ev(4.3, G.hammer_hit(rr(), 0.7), -4.5, 0.0)
+        add_ev(14.5, G.push_thump(rr()), -3.0, 0.1)   # Apple bonk
+        add_ev(33.2, G.whoosh(0.6, rr()), -3.0, 0.0)  # Orbit cannon whoosh
     elif sfx_kind == "thunder":
-        add_ev(4.3, G.thump(rr(), 1.1, 45.0), -3.0, 0.0)
+        add_ev(4.3, G.hammer_hit(rr(), 1.3), -3.0, 0.0)
         add_ev(33.2, I.glock(F(96), 0.7, rr(), dur=0.3), -3.0, -0.2)
-        add_ev(33.25, G.thump(rr(), 1.3, 42.0), -1.5, 0.0)   # Lightning snap + thunder
+        add_ev(33.25, G.bolt_snap(rr()), -1.5, 0.0)   # Lightning snap
     elif sfx_kind == "coil":
-        add_ev(4.3, I.vibra(F(88), 0.6, rr(), dur=0.4), -4.0, 0.0)
-        add_ev(33.2, G.thump(rr(), 1.1, 52.0), -2.5, 0.0)
+        add_ev(4.3, I.vibes(F(88), 0.6, rr(), dur=0.4), -4.0, 0.0)
+        add_ev(33.2, G.bolt_snap(rr()), -2.5, 0.0)
         add_ev(33.3, I.glock(F(98), 0.8, rr(), dur=0.5), -3.5, 0.2)
     else:  # xray_tube
         add_ev(4.3, I.glock(F(91), 0.5, rr(), dur=0.6), -5.0, 0.0)
-        add_ev(33.2, I.vibra(F(86), 0.7, rr(), dur=0.9), -3.0, 0.0)  # Mysterious X-ray glow chime
+        add_ev(33.2, I.vibes(F(86), 0.7, rr(), dur=0.9), -3.0, 0.0)  # Mysterious X-ray glow chime
 
     return hp(out, 25, 2)
 
