@@ -54,7 +54,7 @@ async def main(d: Path, voice: str | None = None, rate: str | None = None, pitch
     slug = d.name.lower()
 
     sel_voice = voice or VOICE_MAP.get(slug, "en-US-AndrewMultilingualNeural")
-    sel_rate = rate or "+15%"
+    sel_rate = rate or "+22%"
     sel_pitch = pitch or "+0Hz"
 
     text = script_text(d / "SCRIPT.md")
