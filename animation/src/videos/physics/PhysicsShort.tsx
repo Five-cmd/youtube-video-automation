@@ -19,14 +19,22 @@ import { Kit, V, Strand } from "../bridge/build";
 import { twoTone } from "../bridge/shade";
 import { beam, stone } from "../bridge/paint";
 import { Actor, Fx, Pool } from "../bridge/cast";
-import { Pen, INK, bodyFront, bodySide, townsfolk, OFFICER, KID, PARENT, fxBurst, fxStars, fxBlob, Outfit, Expr } from "../bridge/toon";
+import { Pen, INK, bodyFront, bodySide, townsfolk, OFFICER, KID, PARENT, fxBurst, fxSplash, fxStars, fxBlob, Outfit, Expr } from "../bridge/toon";
 import { D0, FPS, V3, clamp01, smooth, glide } from "../bridge/story";
 
-export type EpId = "cavendish" | "magdeburg" | "faraday";
+export type EpId =
+  | "cavendish" | "magdeburg" | "faraday"
+  | "galileo" | "archimedes" | "newton" | "franklin" | "tesla" | "rontgen";
 export const EP_FRAMES: Record<EpId, number> = {
   cavendish: 2070, // 69.0 s @ 30 fps
   magdeburg: 1965, // 65.5 s @ 30 fps
   faraday: 2010,   // 67.0 s @ 30 fps
+  galileo: 1980,   // 66.0 s @ 30 fps
+  archimedes: 1980,
+  newton: 2010,
+  franklin: 1980,
+  tesla: 1980,
+  rontgen: 1980,
 };
 
 // Plaza stage on the cobblestone riverfront promenade (clear sightlines, town + river backdrop)
@@ -114,6 +122,24 @@ class EpisodeRig {
   boltMesh = new THREE.Mesh();
   leafL = new THREE.Mesh();
   leafR = new THREE.Mesh();
+  // Galileo parts
+  ballHeavy = new THREE.Mesh();
+  ballLight = new THREE.Mesh();
+  // Archimedes parts
+  crownMesh = new THREE.Mesh();
+  waterLvl = new THREE.Mesh();
+  // Newton parts
+  appleMesh = new THREE.Mesh();
+  moonMesh = new THREE.Mesh();
+  // Franklin parts
+  kiteGroup = new THREE.Group();
+  franklinSpark = new THREE.Mesh();
+  // Tesla parts
+  teslaArc = new THREE.Mesh();
+  bulbGlow = new THREE.Mesh();
+  // Rontgen parts
+  xrayScreen = new THREE.Mesh();
+  xrayBeam = new THREE.Mesh();
 
   constructor(public ep: EpId, root: THREE.Group) {
     this.group.position.set(SX, SY, SZ);
@@ -318,6 +344,134 @@ class EpisodeRig {
       const roomFloor = new THREE.Mesh(new THREE.BoxGeometry(3.8, 0.1, 3.8), mStone);
       roomFloor.position.set(0, 0.05, 0);
       this.analogyGroup.add(roomFloor);
+    }
+
+    if (ep === "galileo") {
+      // Leaning Pisa-style stone tower offset behind stage (-Z) so characters in front are 100% unobstructed
+      const tower = new THREE.Group();
+      tower.position.set(-0.95, 0, -1.35);
+      tower.rotation.z = -0.09;
+      for (let tier = 0; tier < 3; tier++) {
+        const cyl = new THREE.Mesh(new THREE.CylinderGeometry(0.75 - tier * 0.05, 0.8 - tier * 0.05, 1.45, 18), mPaper);
+        cyl.position.y = 0.72 + tier * 1.45;
+        const rim = new THREE.Mesh(new THREE.CylinderGeometry(0.84 - tier * 0.05, 0.84 - tier * 0.05, 0.12, 18), mStone);
+        rim.position.y = 1.44 + tier * 1.45;
+        tower.add(cyl, rim);
+      }
+      this.group.add(tower);
+      this.ballHeavy = new THREE.Mesh(new THREE.SphereGeometry(0.28, 18, 14), mIron);
+      this.ballLight = new THREE.Mesh(new THREE.SphereGeometry(0.13, 14, 12), mBrass);
+      this.group.add(this.ballHeavy, this.ballLight);
+      const pad = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.12, 1.4), mStone);
+      pad.position.set(0, 0.06, 0);
+      this.analogyGroup.add(pad);
+    }
+
+    if (ep === "archimedes") {
+      // Royal stone bathtub positioned cleanly beside Archimedes (-X, -Z) so his face stays clear
+      const tub = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.75, 1.2), mPaper);
+      tub.position.set(-0.45, 0.38, -0.45);
+      this.waterLvl = new THREE.Mesh(new THREE.BoxGeometry(1.88, 0.56, 0.98), mGlass);
+      this.waterLvl.position.set(-0.45, 0.42, -0.45);
+      const ped = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.38, 0.95, 12), mStone);
+      ped.position.set(1.15, 0.48, -0.35);
+      this.crownMesh = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.07, 10, 18), mBrass);
+      this.crownMesh.rotation.x = Math.PI / 2;
+      this.crownMesh.position.set(1.15, 1.05, -0.35);
+      this.group.add(tub, this.waterLvl, ped, this.crownMesh);
+      const jar = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.45, 1.1, 16), mGlass);
+      jar.position.set(0, 0.55, 0);
+      this.analogyGroup.add(jar);
+    }
+
+    if (ep === "newton") {
+      // Apple tree trunk & canopy offset behind Newton (-Z) + mini Earth & orbiting Moon
+      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.3, 2.4, 12), mWood);
+      trunk.position.set(-0.85, 1.2, -1.05);
+      const mLeaf = twoTone(new THREE.MeshLambertMaterial({ color: "#3d7a47" }));
+      const crown = new THREE.Mesh(new THREE.SphereGeometry(1.35, 16, 12), mLeaf);
+      crown.position.set(-0.85, 2.85, -1.05);
+      this.appleMesh = new THREE.Mesh(new THREE.SphereGeometry(0.14, 14, 10), mRed);
+      const mEarth = twoTone(new THREE.MeshLambertMaterial({ color: "#3b76c4" }));
+      const earth = new THREE.Mesh(new THREE.SphereGeometry(0.42, 18, 14), mEarth);
+      earth.position.set(1.25, 1.45, -0.45);
+      this.moonMesh = new THREE.Mesh(new THREE.SphereGeometry(0.14, 14, 10), mPaper);
+      this.group.add(trunk, crown, this.appleMesh, earth, this.moonMesh);
+      const bucket = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.28, 0.5, 14), mCopper);
+      bucket.position.set(0, 1.25, 0);
+      this.analogyGroup.add(bucket);
+    }
+
+    if (ep === "franklin") {
+      // Open wooden shed frame on right + soaring silk kite & glowing spark key
+      const shedRoof = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.12, 1.6), mWood);
+      shedRoof.position.set(0.7, 2.45, -0.35);
+      for (const x of [-0.15, 1.55]) {
+        const post = new THREE.Mesh(new THREE.BoxGeometry(0.12, 2.4, 0.12), mWood);
+        post.position.set(x, 1.2, -0.95);
+        this.group.add(post);
+      }
+      this.kiteGroup.position.set(-1.1, 3.35, -0.6);
+      const kiteBody = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.9, 0.06), mRed);
+      kiteBody.rotation.z = Math.PI / 4;
+      this.kiteGroup.add(kiteBody);
+      const key = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.35, 10), mBrass);
+      key.rotation.z = Math.PI / 2;
+      key.position.set(-0.25, 1.35, -0.1);
+      const sparkMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(2.2, 3.2, 6.8) });
+      this.franklinSpark = new THREE.Mesh(new THREE.SphereGeometry(0.16, 12, 10), sparkMat);
+      this.franklinSpark.position.set(-0.1, 1.35, -0.1);
+      this.franklinSpark.layers.set(NOINK);
+      this.group.add(shedRoof, this.kiteGroup, key, this.franklinSpark);
+      const rug = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.08, 1.8), mRed);
+      rug.position.set(0, 0.04, 0);
+      this.analogyGroup.add(rug);
+    }
+
+    if (ep === "tesla") {
+      // Wardenclyffe-style tower with glowing HDR torus dome & wireless bulb
+      const towerLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.48, 2.7, 12), mWood);
+      towerLeg.position.set(-0.85, 1.35, -0.85);
+      const dome = new THREE.Mesh(new THREE.SphereGeometry(0.55, 18, 14), mCopper);
+      dome.position.set(-0.85, 2.85, -0.85);
+      const arcMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(2.0, 3.0, 7.0) });
+      this.teslaArc = new THREE.Mesh(new THREE.TorusGeometry(0.75, 0.04, 8, 24), arcMat);
+      this.teslaArc.rotation.x = Math.PI / 2;
+      this.teslaArc.position.set(-0.85, 2.85, -0.85);
+      this.teslaArc.layers.set(NOINK);
+      const bulbMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(3.5, 3.0, 1.2) });
+      this.bulbGlow = new THREE.Mesh(new THREE.SphereGeometry(0.22, 16, 12), bulbMat);
+      this.bulbGlow.position.set(1.15, 1.55, -0.15);
+      this.bulbGlow.layers.set(NOINK);
+      const stand = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.14, 1.35, 10), mBrass);
+      stand.position.set(1.15, 0.68, -0.15);
+      this.group.add(towerLeg, dome, this.teslaArc, this.bulbGlow, stand);
+      const fork1 = new THREE.Mesh(new THREE.BoxGeometry(0.12, 1.2, 0.12), mBrass);
+      fork1.position.set(-0.7, 0.6, 0);
+      const fork2 = new THREE.Mesh(new THREE.BoxGeometry(0.12, 1.2, 0.12), mBrass);
+      fork2.position.set(0.7, 0.6, 0);
+      this.analogyGroup.add(fork1, fork2);
+    }
+
+    if (ep === "rontgen") {
+      // Cathode glass tube in black box + glowing green phosphor screen
+      const box = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.65, 0.65), mIron);
+      box.position.set(-1.15, 1.25, -0.45);
+      const table = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.9, 0.8), mWood);
+      table.position.set(-1.15, 0.45, -0.45);
+      const scrMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(0.9, 3.4, 1.3) });
+      this.xrayScreen = new THREE.Mesh(new THREE.BoxGeometry(0.12, 1.2, 0.95), scrMat);
+      this.xrayScreen.position.set(1.1, 1.35, -0.35);
+      this.xrayScreen.layers.set(NOINK);
+      const beamMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(0.5, 2.2, 1.0) });
+      this.xrayBeam = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.24, 1.9, 12), beamMat);
+      this.xrayBeam.rotation.z = Math.PI / 2;
+      this.xrayBeam.position.set(0.0, 1.3, -0.4);
+      this.xrayBeam.layers.set(NOINK);
+      this.group.add(box, table, this.xrayScreen, this.xrayBeam);
+      const fence = new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.3, 0.08), mIron);
+      fence.position.set(0, 0.65, 0);
+      this.analogyGroup.add(fence);
     }
 
     this.group.traverse((o) => { if (o !== this.boltMesh) { o.castShadow = true; o.receiveShadow = true; } });
@@ -561,6 +715,111 @@ class EpisodeRig {
       }
     }
 
+    if (this.ep === "galileo" || this.ep === "archimedes" || this.ep === "newton" || this.ep === "franklin" || this.ep === "tesla" || this.ep === "rontgen") {
+      const heroPose = Math.floor(t * 8) % 8;
+      const heroWalk = shot.id === 2 || shot.id === 15;
+      const heroBob = heroWalk ? 0 : 0.02 * Math.sin(t * 3.2);
+      const climax = shot.id >= 8 && shot.id <= 10;
+      const heroExpr: Expr = climax ? "grin" : shot.id >= 5 && shot.id <= 7 ? "stern" : "neutral";
+      const heroWave = climax ? 0.65 + 0.2 * Math.sin(t * 6) : 0.28 + 0.15 * Math.sin(t * 3);
+
+      // Episode-specific lively 3D props synced to speech beats
+      if (this.ep === "galileo") {
+        const dropU = shot.id === 8 ? clamp01((f - 995) / 28) : shot.id > 8 ? 1 : 0;
+        const yBall = 3.85 - dropU * 3.6;
+        this.ballHeavy.position.set(SX - 0.55 - SX, yBall, -0.5);
+        this.ballLight.position.set(SX + 0.15 - SX, yBall, -0.5);
+        if (shot.id === 8 && f >= 1020 && f < 1055) {
+          fxList.push({ key: "galBurst", cw: 260, ch: 260, draw: (p) => fxBurst(p, 0.5), x: SX - 0.2, y: SY + 0.4, z: SZ - 0.3, w: 1.4, h: 1.4 });
+        }
+      } else if (this.ep === "archimedes") {
+        const dunk = shot.id >= 7 ? clamp01((f - 850) / 35) : 0;
+        this.crownMesh.position.set(1.15 - dunk * 1.6, 1.05 - dunk * 0.45, -0.35 - dunk * 0.1);
+        this.waterLvl.scale.y = 1 + dunk * 0.25;
+        if (shot.id === 8 && f >= 995 && f < 1040) {
+          fxList.push({ key: `archSpl|${f % 4}`, cw: 260, ch: 260, draw: (p) => fxSplash(p, (f - 995) / 45), x: SX - 0.45, y: SY + 0.9, z: SZ - 0.35, w: 1.6, h: 1.4 });
+        }
+      } else if (this.ep === "newton") {
+        const appleDrop = shot.id >= 4 ? clamp01((f - 460) / 22) : 0;
+        this.appleMesh.position.set(-0.35, 2.25 - appleDrop * 2.05, -0.5);
+        const orbAng = t * 1.8;
+        this.moonMesh.position.set(1.25 + Math.cos(orbAng) * 0.95, 1.45 + Math.sin(orbAng) * 0.35, -0.45 + Math.sin(orbAng) * 0.75);
+      } else if (this.ep === "franklin") {
+        this.kiteGroup.position.y = 3.35 + 0.22 * Math.sin(t * 3.1);
+        this.kiteGroup.rotation.z = 0.14 * Math.sin(t * 2.4);
+        const zapping = shot.id === 8 || shot.id === 1;
+        this.franklinSpark.visible = zapping && (f % 3 !== 0);
+        if (zapping) {
+          fxList.push({ key: `fkSp|${f % 3}`, cw: 260, ch: 260, draw: (p) => fxStars(p, (f % 10) / 10), x: SX - 0.1, y: SY + 1.38, z: SZ + 0.1, w: 0.9, h: 0.9 });
+        }
+      } else if (this.ep === "tesla") {
+        const active = (shot.id >= 5 && shot.id <= 8) || shot.id === 1;
+        this.teslaArc.visible = active && (f % 2 === 0);
+        this.teslaArc.scale.setScalar(1 + 0.12 * Math.sin(t * 14));
+        this.bulbGlow.visible = active;
+        if (active) {
+          fxList.push({ key: `tsSp|${f % 3}`, cw: 260, ch: 260, draw: (p) => fxStars(p, (f % 10) / 10), x: SX - 0.85, y: SY + 2.9, z: SZ - 0.5, w: 1.1, h: 1.1 });
+        }
+      } else if (this.ep === "rontgen") {
+        const glowing = (shot.id >= 3 && shot.id <= 8) || shot.id === 1;
+        this.xrayScreen.visible = glowing;
+        this.xrayBeam.visible = glowing && (f % 2 === 0);
+      }
+
+      // Main scientist hero standing clearly in front (zero face occlusion!)
+      const heroOutfit = this.ep === "archimedes" ? CAVENDISH_OUTFIT : this.ep === "tesla" ? FARADAY_OUTFIT : GUERICKE_OUTFIT;
+      places.push({
+        key: `hero|${this.ep}|${heroWalk ? "m" : "s"}|${heroExpr}|${heroPose}|${blink(1) ? 1 : 0}`,
+        draw: (p) => bodyFront(p, heroOutfit, {
+          mode: heroWalk ? "stroll" : "stand",
+          phase: (t * 1.6) % 1,
+          expr: heroExpr,
+          blink: blink(1),
+          wave: heroWave,
+          headTilt: 0.07 * Math.sin(t * 2.3),
+          look: 0.35 * Math.sin(t * 1.5),
+        }),
+        x: SX + 0.35 + (heroWalk ? 0.25 * Math.sin(t * 1.4) : 0),
+        y: SY + heroBob,
+        z: SZ + 0.65,
+      });
+
+      // Lively bystanders reacting in real-time (blinking, tilting heads, shocked at climax!)
+      for (let i = 0; i < 3; i++) {
+        const audPose = Math.floor((t + i * 0.25) * 6) % 6;
+        const audExpr: Expr = climax ? "shock" : shot.id >= 5 ? "nervous" : "neutral";
+        places.push({
+          key: `epAud|${this.ep}|${i}|${audExpr}|${audPose}|${blink(i + 4) ? 1 : 0}`,
+          draw: (p) => bodyFront(p, townsfolk(i + 2), {
+            mode: "stand",
+            expr: audExpr,
+            blink: blink(i + 4),
+            headTilt: 0.08 * Math.sin(t * 2.6 + i),
+            look: -0.45,
+            wave: climax ? 0.75 : undefined,
+          }),
+          x: SX + 1.25 + i * 0.58,
+          y: SY + (climax && f < 1040 ? 0.16 * Math.abs(Math.sin(t * 10 + i)) : 0),
+          z: SZ + 0.95 + (i % 2) * 0.22,
+        });
+      }
+
+      // Golden-hour park analogy characters (Shots 11-12)
+      if (shot.id === 11 || shot.id === 12) {
+        const pPose = Math.floor(t * 6) % 6;
+        places.push({
+          key: `parkA|${this.ep}|${pPose}|${blink(5) ? 1 : 0}`,
+          draw: (p) => bodyFront(p, PARENT, { mode: "stand", expr: "grin", blink: blink(5), wave: 0.4 + 0.2 * Math.sin(t * 4), headTilt: 0.05 * Math.sin(t * 2) }),
+          x: PX - 0.85, y: PY, z: PZ + 0.15,
+        });
+        places.push({
+          key: `parkK|${this.ep}|${pPose}|${blink(6) ? 1 : 0}`,
+          draw: (p) => bodyFront(p, KID, { mode: "stand", expr: "shock", blink: blink(6), headTilt: -0.06 * Math.sin(t * 2.5) }),
+          x: PX + 0.85, y: PY, z: PZ + 0.15, scale: 0.84,
+        });
+      }
+    }
+
     // Bind actors + contact shadow blobs into the shared Pool (high-res 480x800 character canvas so ink lines never break!)
     let ai = 0, fi = 0;
     const usedA: Actor[] = [], usedF: Fx[] = [];
@@ -680,3 +939,9 @@ const makeEpisodeComp = (ep: EpId): React.FC => {
 export const CavendishShort = makeEpisodeComp("cavendish");
 export const MagdeburgShort = makeEpisodeComp("magdeburg");
 export const FaradayShort = makeEpisodeComp("faraday");
+export const GalileoShort = makeEpisodeComp("galileo");
+export const ArchimedesShort = makeEpisodeComp("archimedes");
+export const NewtonShort = makeEpisodeComp("newton");
+export const FranklinShort = makeEpisodeComp("franklin");
+export const TeslaShort = makeEpisodeComp("tesla");
+export const RontgenShort = makeEpisodeComp("rontgen");
