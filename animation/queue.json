@@ -76,6 +76,27 @@
       "title": "The Invisible Ray That Showed His Wife's Bones #physics #xray",
       "approved": true,
       "posted": false
+    },
+    {
+      "comp": "PascalShort",
+      "slug": "pascal",
+      "title": "He Exploded a Wooden Barrel With One Cup of Water #physics #pressure",
+      "approved": true,
+      "posted": false
+    },
+    {
+      "comp": "DopplerShort",
+      "slug": "doppler",
+      "title": "The Train Band That Proved Light Waves Stretch #physics #sound",
+      "approved": true,
+      "posted": false
+    },
+    {
+      "comp": "CurieShort",
+      "slug": "curie",
+      "title": "The Shed That Glowed Blue in the Dark #physics #science",
+      "approved": true,
+      "posted": false
     }
   ]
 }
