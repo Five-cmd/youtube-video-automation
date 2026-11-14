@@ -4,6 +4,7 @@ import { BridgeShort, BRIDGE_FRAMES } from "./videos/bridge/Bridge";
 import {
   CavendishShort, MagdeburgShort, FaradayShort,
   GalileoShort, ArchimedesShort, NewtonShort, FranklinShort, TeslaShort, RontgenShort,
+  PascalShort, DopplerShort, CurieShort,
   EP_FRAMES,
 } from "./videos/physics/PhysicsShort";
 
@@ -19,5 +20,8 @@ export const Root: React.FC = () => (
     <Composition id="FranklinShort" component={FranklinShort} durationInFrames={EP_FRAMES.franklin} fps={30} width={1080} height={1920} />
     <Composition id="TeslaShort" component={TeslaShort} durationInFrames={EP_FRAMES.tesla} fps={30} width={1080} height={1920} />
     <Composition id="RontgenShort" component={RontgenShort} durationInFrames={EP_FRAMES.rontgen} fps={30} width={1080} height={1920} />
+    <Composition id="PascalShort" component={PascalShort} durationInFrames={EP_FRAMES.pascal} fps={30} width={1080} height={1920} />
+    <Composition id="DopplerShort" component={DopplerShort} durationInFrames={EP_FRAMES.doppler} fps={30} width={1080} height={1920} />
+    <Composition id="CurieShort" component={CurieShort} durationInFrames={EP_FRAMES.curie} fps={30} width={1080} height={1920} />
   </>
 );
