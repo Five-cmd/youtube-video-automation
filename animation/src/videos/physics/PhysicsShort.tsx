@@ -662,6 +662,7 @@ const EpInner: React.FC<{ ep: EpId; kit: Kit; shots: EpShot[]; shot: EpShot }> =
   // Let base World update sky, river, town, clouds, and light presets (shot 11/12/13 = golden, others = day)
   const baseId = shot.light === "golden" ? 12 : 2;
   world.update(baseId, f, cam, scene, true);
+  if (ep === "galileo" && shot.id === 14) scene.fog = null;
   const look = rig.update(f, shot, cam, world);
   gl.shadowMap.autoUpdate = false;
   if (lastShot.current !== shot.id) {
