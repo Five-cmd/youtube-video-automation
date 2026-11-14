@@ -22,6 +22,12 @@ COMP_MAP = {
     "CavendishShort": ("cavendish", 2070 / 30.0),
     "MagdeburgShort": ("magdeburg", 1965 / 30.0),
     "FaradayShort": ("faraday", 2010 / 30.0),
+    "GalileoShort": ("galileo", 1980 / 30.0),
+    "ArchimedesShort": ("archimedes", 1980 / 30.0),
+    "NewtonShort": ("newton", 2010 / 30.0),
+    "FranklinShort": ("franklin", 1980 / 30.0),
+    "TeslaShort": ("tesla", 1980 / 30.0),
+    "RontgenShort": ("rontgen", 1980 / 30.0),
 }
 
 
