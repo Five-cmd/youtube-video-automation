@@ -600,7 +600,7 @@ def build_thematic_sfx(dur: float, v_ref: float, sfx_kind: str) -> np.ndarray:
         place(out, st_x, t)
 
     # Subtle ambient bed
-    bed = lp(colored(dur, rr(), -1.5), 400.0) * 0.05
+    bed = lp(colored(N, rr(), -1.5), 400.0) * 0.05
     place(out, fades(st(bed), 0.4, 0.5), 0.0)
 
     if sfx_kind == "cannonball":
