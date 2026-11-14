@@ -25,6 +25,9 @@ VOICE_MAP = {
     "franklin": "en-US-AndrewMultilingualNeural",
     "tesla": "en-US-AndrewMultilingualNeural",
     "rontgen": "en-US-AndrewMultilingualNeural",
+    "pascal": "en-US-AndrewMultilingualNeural",
+    "doppler": "en-US-AndrewMultilingualNeural",
+    "curie": "en-US-AndrewMultilingualNeural",
 }
 
 
