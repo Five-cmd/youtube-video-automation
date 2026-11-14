@@ -28,7 +28,11 @@ COMP_MAP = {
     "FranklinShort": ("franklin", 2100 / 30.0),
     "TeslaShort": ("tesla", 2100 / 30.0),
     "RontgenShort": ("rontgen", 2100 / 30.0),
+    "PascalShort": ("pascal", 2100 / 30.0),
+    "DopplerShort": ("doppler", 2100 / 30.0),
+    "CurieShort": ("curie", 2100 / 30.0),
 }
+NEW_SLUGS = ("galileo", "archimedes", "newton", "franklin", "tesla", "rontgen", "pascal", "doppler", "curie")
 
 
 def fit_len(x: np.ndarray, target_n: int) -> np.ndarray:
@@ -72,7 +76,7 @@ def build_audio(comp: str) -> Path:
 
     # Never silently truncate speech: time-fit via transparent FFmpeg atempo if narration exceeds usable_s
     speech_end = words[-1]["e"] if words else len(v_mono) / SR
-    if speech_end > usable_s and slug in ("galileo", "archimedes", "newton", "franklin", "tesla", "rontgen"):
+    if speech_end > usable_s and slug in NEW_SLUGS:
         import imageio_ffmpeg
         speed = min(1.35, max(1.0, speech_end / (usable_s - lead_s)))
         fitted_wav = short_dir / "voice" / "voice_fit.wav"
@@ -88,7 +92,7 @@ def build_audio(comp: str) -> Path:
             w["e"] = round(lead_s + w["e"] / speed, 3)
         print(f"[{slug}] Time-fitted voice {speech_end:.2f}s -> {len(v_mono)/SR:.2f}s (atempo={speed:.3f}x)")
         lead_n = ns(lead_s)
-    elif slug in ("galileo", "archimedes", "newton", "franklin", "tesla", "rontgen"):
+    elif slug in NEW_SLUGS:
         for w in words:
             w["s"] = round(lead_s + w["s"], 3)
             w["e"] = round(lead_s + w["e"], 3)
