@@ -38,15 +38,15 @@
       "slug": "galileo",
       "title": "He Dropped Two Balls Off a Tower to Prove Everyone Wrong #physics #gravity",
       "approved": true,
-      "posted": true,
-      "video_id": "1hsxzw8EGmc"
+      "posted": false
     },
     {
       "comp": "ArchimedesShort",
       "slug": "archimedes",
       "title": "The Fake Crown That Made a Genius Run Naked #physics #science",
       "approved": true,
-      "posted": false
+      "posted": true,
+      "video_id": "b2qlFB-oD3w"
     },
     {
       "comp": "NewtonShort",
