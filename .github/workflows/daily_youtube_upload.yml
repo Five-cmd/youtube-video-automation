@@ -17,6 +17,9 @@ on:
 permissions:
   contents: write
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 concurrency:
   group: cartoon-post
   cancel-in-progress: false
@@ -62,7 +65,7 @@ jobs:
           python-version: "3.12"
       - name: Synthesize -15 LUFS episode audio master
         run: |
-          pip install --quiet numpy scipy edge-tts imageio-ffmpeg
+          pip install --quiet -r requirements-audio.txt
           python3 audio/make_short_audio.py "${{ needs.plan.outputs.comp }}"
       - uses: actions/upload-artifact@v4
         with:
