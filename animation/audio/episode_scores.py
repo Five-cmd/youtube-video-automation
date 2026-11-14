@@ -604,28 +604,36 @@ def build_thematic_sfx(dur: float, v_ref: float, sfx_kind: str) -> np.ndarray:
     place(out, fades(st(bed), 0.4, 0.5), 0.0)
 
     if sfx_kind == "cannonball":
-        add_ev(4.3, G.hammer_hit(rr(), 1.1), -3.5, 0.0)  # Hook flash
-        add_ev(33.2, G.hammer_hit(rr(), 1.5), -1.5, -0.15)  # Heavy ball boom
-        add_ev(33.22, G.hammer_hit(rr(), 1.0), -2.0, 0.15)  # Light ball simultaneous boom
+        add_ev(4.5, G.hammer_hit(rr(), 1.1), -3.5, 0.0)   # Hook impact
+        add_ev(33.9, G.hammer_hit(rr(), 1.5), -1.5, -0.15)  # Simultaneous cobblestone boom (S08)
+        add_ev(33.92, G.hammer_hit(rr(), 1.0), -2.0, 0.15)
+        add_ev(50.9, G.hammer_hit(rr(), 1.1), -3.0, 0.0)   # Bowling ball + marble hit (S12)
+        add_ev(61.2, G.push_thump(rr()), -3.5, 0.0)        # Lunar hammer + feather landing (S14)
     elif sfx_kind == "splash":
-        add_ev(4.3, G.splash_big(rr()), -4.5, 0.0)
-        add_ev(22.5, G.splash_big(rr()), -2.5, 0.0)   # Tub overflow
-        add_ev(33.2, G.splash_big(rr()), -2.5, 0.1)   # Crown dunk
+        add_ev(5.5, G.push_thump(rr()), -4.5, 0.0)
+        add_ev(29.5, G.splash_big(rr()), -2.5, 0.0)        # Tub water overflow (S07)
+        add_ev(33.0, G.splash_big(rr()), -2.0, 0.0)        # Eureka leap (S08)
+        add_ev(50.8, G.splash_big(rr()), -3.5, 0.1)        # Twin jars drop (S12)
+        add_ev(55.5, G.splash_big(rr()), -2.5, 0.1)        # Crown dunk (S13)
     elif sfx_kind == "apple":
-        add_ev(4.3, G.hammer_hit(rr(), 0.7), -4.5, 0.0)
-        add_ev(14.5, G.push_thump(rr()), -3.0, 0.1)   # Apple bonk
-        add_ev(33.2, G.whoosh(0.6, rr()), -3.0, 0.0)  # Orbit cannon whoosh
+        add_ev(4.8, G.hammer_hit(rr(), 0.7), -4.5, 0.0)
+        add_ev(16.0, G.push_thump(rr()), -2.5, 0.1)        # Apple bonk (S04)
+        add_ev(33.0, G.whoosh(0.6, rr()), -3.0, 0.0)       # Mountain cannon blast (S08)
     elif sfx_kind == "thunder":
-        add_ev(4.3, G.hammer_hit(rr(), 1.3), -3.0, 0.0)
-        add_ev(33.2, I.glock(F(96), 0.7, rr(), dur=0.3), -3.0, -0.2)
-        add_ev(33.25, G.bolt_snap(rr()), -1.5, 0.0)   # Lightning snap
+        add_ev(5.0, G.hammer_hit(rr(), 1.2), -3.5, 0.0)
+        add_ev(16.5, G.hammer_hit(rr(), 1.3), -3.0, 0.0)   # Dark storm thunder (S04)
+        add_ev(34.3, G.bolt_snap(rr()), -1.5, 0.0)         # Key-to-knuckle blue spark (S08)
+        add_ev(53.2, G.bolt_snap(rr()), -3.0, 0.1)         # Carpet doorknob static zap (S12)
     elif sfx_kind == "coil":
-        add_ev(4.3, I.vibes(F(88), 0.6, rr(), dur=0.4), -4.0, 0.0)
-        add_ev(33.2, G.bolt_snap(rr()), -2.5, 0.0)
-        add_ev(33.3, I.glock(F(98), 0.8, rr(), dur=0.5), -3.5, 0.2)
+        add_ev(5.5, I.vibes(F(88), 0.6, rr(), dur=0.4), -4.0, 0.0)
+        add_ev(21.5, G.bolt_snap(rr()), -2.5, 0.0)         # Wardenclyffe arcs (S05)
+        add_ev(44.0, G.hammer_hit(rr(), 1.4), -2.0, 0.0)   # Dynamite tower blast (S10)
+        add_ev(52.5, I.glock(F(98), 0.8, rr(), dur=0.6), -3.5, 0.2)  # Tuning fork resonance (S12)
     else:  # xray_tube
-        add_ev(4.3, I.glock(F(91), 0.5, rr(), dur=0.6), -5.0, 0.0)
-        add_ev(33.2, I.vibes(F(86), 0.7, rr(), dur=0.9), -3.0, 0.0)  # Mysterious X-ray glow chime
+        add_ev(5.3, I.glock(F(91), 0.5, rr(), dur=0.6), -5.0, 0.0)
+        add_ev(19.3, I.vibes(F(84), 0.6, rr(), dur=0.6), -4.0, 0.0)  # X-ray screen reveal (S05)
+        add_ev(33.7, I.vibes(F(86), 0.7, rr(), dur=0.9), -3.0, 0.0)  # Wedding ring plate (S08)
+        add_ev(52.3, G.hammer_hit(rr(), 0.7), -3.5, 0.0)   # Marble fence bounce (S12)
 
     return hp(out, 25, 2)
 
