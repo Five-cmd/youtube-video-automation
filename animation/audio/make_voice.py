@@ -55,20 +55,33 @@ async def main(d: Path, voice: str | None = None, rate: str | None = None, pitch
 
     sel_voice = voice or VOICE_MAP.get(slug, "en-US-AndrewMultilingualNeural")
     sel_rate = rate or "+15%"
-    sel_pitch = pitch or "-2Hz"
+    sel_pitch = pitch or "+0Hz"
 
     text = script_text(d / "SCRIPT.md")
-    print(f"[{slug}] Synthesizing with voice='{sel_voice}', rate='{sel_rate}', pitch='{sel_pitch}'...")
-
-    com = edge_tts.Communicate(text, sel_voice, rate=sel_rate, pitch=sel_pitch, boundary="WordBoundary")
+    attempts = [
+        (sel_voice, sel_rate, sel_pitch),
+        (sel_voice, sel_rate, "+0Hz"),
+        ("en-US-ChristopherNeural", "+12%", "+0Hz"),
+    ]
     words, audio = [], bytearray()
-    async for ch in com.stream():
-        if ch["type"] == "audio":
-            audio += ch["data"]
-        elif ch["type"] == "WordBoundary":
-            s = round(ch["offset"] / 1e7, 3)
-            e = round((ch["offset"] + ch["duration"]) / 1e7, 3)
-            words.append({"w": ch["text"], "s": s, "e": e, "word": ch["text"], "start": s, "end": e})
+    for v_try, r_try, p_try in attempts:
+        try:
+            print(f"[{slug}] Synthesizing with voice='{v_try}', rate='{r_try}', pitch='{p_try}'...")
+            com = edge_tts.Communicate(text, v_try, rate=r_try, pitch=p_try, boundary="WordBoundary")
+            words, audio = [], bytearray()
+            async for ch in com.stream():
+                if ch["type"] == "audio":
+                    audio += ch["data"]
+                elif ch["type"] == "WordBoundary":
+                    s = round(ch["offset"] / 1e7, 3)
+                    e = round((ch["offset"] + ch["duration"]) / 1e7, 3)
+                    words.append({"w": ch["text"], "s": s, "e": e, "word": ch["text"], "start": s, "end": e})
+            if audio:
+                break
+        except Exception as err:
+            print(f"[{slug}] TTS attempt ({v_try}, {p_try}) failed: {err}")
+    if not audio:
+        raise RuntimeError(f"[{slug}] All TTS attempts failed")
 
     mp3_path = out / "voice.mp3"
     wav_path = out / "voice.wav"
