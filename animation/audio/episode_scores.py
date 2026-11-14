@@ -540,7 +540,8 @@ NEW_EPISODE_THEMES = {
 
 def build_thematic_music(dur: float, cfg: dict) -> np.ndarray:
     b = EpBand(ns(dur))
-    r = rng(cfg["seed"])
+    r_base = rng(cfg["seed"])
+    r = lambda: rng(int(r_base.integers(1, 2**31 - 1)))
     beat = 60.0 / cfg["bpm"]
     n_beats = int(dur / beat)
     prog = cfg["prog"]
