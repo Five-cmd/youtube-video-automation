@@ -22,10 +22,12 @@ import { Actor, Fx, Pool } from "../bridge/cast";
 import { Pen, INK, bodyFront, bodySide, townsfolk, OFFICER, KID, PARENT, fxBurst, fxSplash, fxStars, fxBlob, Outfit, Expr } from "../bridge/toon";
 import { D0, FPS, V3, clamp01, smooth, glide } from "../bridge/story";
 import { NewEpId, NewEpRig, buildNewShots, buildNewEpisodeProps, updateNewEpisode } from "./newEpisodes";
+import { ExtraEpId, ExtraRig, buildExtraShots, buildExtraProps, updateExtraEpisode } from "./scenes/extraEpisodes";
 
 export type EpId =
   | "cavendish" | "magdeburg" | "faraday"
-  | "galileo" | "archimedes" | "newton" | "franklin" | "tesla" | "rontgen";
+  | "galileo" | "archimedes" | "newton" | "franklin" | "tesla" | "rontgen"
+  | "pascal" | "doppler" | "curie";
 export const EP_FRAMES: Record<EpId, number> = {
   cavendish: 2070, // 69.0 s @ 30 fps
   magdeburg: 1965, // 65.5 s @ 30 fps
@@ -36,10 +38,15 @@ export const EP_FRAMES: Record<EpId, number> = {
   franklin: 2100,
   tesla: 2100,
   rontgen: 2100,
+  pascal: 2100,
+  doppler: 2100,
+  curie: 2100,
 };
 
 const isNewEp = (ep: EpId): ep is NewEpId =>
   ep === "galileo" || ep === "archimedes" || ep === "newton" || ep === "franklin" || ep === "tesla" || ep === "rontgen";
+const isExtraEp = (ep: EpId): ep is ExtraEpId =>
+  ep === "pascal" || ep === "doppler" || ep === "curie";
 
 // Plaza stage on the cobblestone riverfront promenade (clear sightlines, town + river backdrop)
 const SX = 18.0, SY = D0, SZ = -33.2;
@@ -127,6 +134,7 @@ class EpisodeRig {
   leafL = new THREE.Mesh();
   leafR = new THREE.Mesh();
   newRig: NewEpRig | null = null;
+  extraRig: ExtraRig | null = null;
 
   constructor(public ep: EpId, root: THREE.Group) {
     this.group.position.set(SX, SY, SZ);
@@ -335,6 +343,18 @@ class EpisodeRig {
 
     if (isNewEp(ep)) {
       this.newRig = buildNewEpisodeProps(ep, this.group, this.analogyGroup, {
+        wood: mWood,
+        stone: mStone,
+        iron: mIron,
+        copper: mCopper,
+        brass: mBrass,
+        glass: mGlass,
+        red: mRed,
+        paper: mPaper,
+      });
+    }
+    if (isExtraEp(ep)) {
+      this.extraRig = buildExtraProps(ep, this.group, this.analogyGroup, {
         wood: mWood,
         stone: mStone,
         iron: mIron,
@@ -590,6 +610,9 @@ class EpisodeRig {
     if (isNewEp(this.ep) && this.newRig) {
       updateNewEpisode(this.ep, this.newRig, f, shot, [SX, SY, SZ], [PX, PY, PZ], places, fxList);
     }
+    if (isExtraEp(this.ep) && this.extraRig) {
+      updateExtraEpisode(this.ep, f, shot, this.extraRig, [SX, SY, SZ], [PX, PY, PZ], places, fxList);
+    }
 
     // Bind actors + contact shadow blobs into the shared Pool (high-res 480x800 character canvas so ink lines never break!)
     let ai = 0, fi = 0;
@@ -688,7 +711,11 @@ const epDprOverride = () => (getInputProps() as { post?: { dpr?: number } }).pos
 
 const makeEpisodeComp = (ep: EpId): React.FC => {
   const total = EP_FRAMES[ep];
-  const shots = isNewEp(ep) ? buildNewShots(ep, [SX, SY, SZ], [PX, PY, PZ]) : makeShots(total, [SX, SY, SZ], [PX, PY, PZ]);
+  const shots = isNewEp(ep)
+    ? buildNewShots(ep, [SX, SY, SZ], [PX, PY, PZ])
+    : isExtraEp(ep)
+      ? buildExtraShots(ep, [SX, SY, SZ], [PX, PY, PZ])
+      : makeShots(total, [SX, SY, SZ], [PX, PY, PZ]);
   const hookEnd = shots[0].b;
   const Comp: React.FC = () => {
     const f = useCurrentFrame();
@@ -718,3 +745,6 @@ export const NewtonShort = makeEpisodeComp("newton");
 export const FranklinShort = makeEpisodeComp("franklin");
 export const TeslaShort = makeEpisodeComp("tesla");
 export const RontgenShort = makeEpisodeComp("rontgen");
+export const PascalShort = makeEpisodeComp("pascal");
+export const DopplerShort = makeEpisodeComp("doppler");
+export const CurieShort = makeEpisodeComp("curie");
