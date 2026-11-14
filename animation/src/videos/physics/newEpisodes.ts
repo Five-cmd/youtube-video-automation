@@ -4,7 +4,7 @@
 import * as THREE from "three";
 import { NOINK } from "../bridge/ink";
 import { twoTone } from "../bridge/shade";
-import { Strand } from "../bridge/build";
+import { Strand, V } from "../bridge/build";
 import {
   Pen,
   INK,
@@ -19,7 +19,7 @@ import {
   Outfit,
   Expr,
 } from "../bridge/toon";
-import { V3, FPS, clamp01, V } from "../bridge/story";
+import { V3, FPS, clamp01 } from "../bridge/story";
 import { MOON_Y, buildGalileoPisaPiazza, buildGalileoMoonDome } from "./scenes/galileoScene";
 
 export type NewEpId = "galileo" | "archimedes" | "newton" | "franklin" | "tesla" | "rontgen";
