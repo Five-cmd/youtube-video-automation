@@ -694,7 +694,7 @@ const makeEpisodeComp = (ep: EpId): React.FC => {
     const kit = useKit();
     if (!kit) return null;
     const shot = shots.find((s) => f >= s.a && f < s.b) ?? shots[shots.length - 1];
-    const flash = f >= hookEnd && f < hookEnd + 4 ? [1, 0.75, 0.45, 0.2][f - hookEnd] : 0;
+    const flash = f >= hookEnd && f < hookEnd + 4 ? [0.82, 0.58, 0.34, 0.15][f - hookEnd] : 0;
     return (
       <AbsoluteFill style={{ background: "#cfe3f2" }}>
         <ThreeCanvas width={1080} height={1920} dpr={epDprOverride()} shadows gl={{ antialias: false, stencil: false, powerPreference: "high-performance", toneMappingExposure: 1.0 }}
