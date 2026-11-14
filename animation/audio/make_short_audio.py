@@ -31,8 +31,14 @@ COMP_MAP = {
     "PascalShort": ("pascal", 2100 / 30.0),
     "DopplerShort": ("doppler", 2100 / 30.0),
     "CurieShort": ("curie", 2100 / 30.0),
+    "FoucaultShort": ("foucault", 2100 / 30.0),
+    "HertzShort": ("hertz", 2100 / 30.0),
+    "BernoulliShort": ("bernoulli", 2100 / 30.0),
+    "HookeShort": ("hooke", 2100 / 30.0),
+    "HomopolarShort": ("homopolar", 2100 / 30.0),
+    "BlackbodyShort": ("blackbody", 2100 / 30.0),
 }
-NEW_SLUGS = ("galileo", "archimedes", "newton", "franklin", "tesla", "rontgen", "pascal", "doppler", "curie")
+NEW_SLUGS = ("galileo", "archimedes", "newton", "franklin", "tesla", "rontgen", "pascal", "doppler", "curie", "foucault", "hertz", "bernoulli", "hooke", "homopolar", "blackbody")
 
 
 def fit_len(x: np.ndarray, target_n: int) -> np.ndarray:
