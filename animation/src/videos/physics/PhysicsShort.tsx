@@ -23,11 +23,13 @@ import { Pen, INK, bodyFront, bodySide, townsfolk, OFFICER, KID, PARENT, fxBurst
 import { D0, FPS, V3, clamp01, smooth, glide } from "../bridge/story";
 import { NewEpId, NewEpRig, buildNewShots, buildNewEpisodeProps, updateNewEpisode } from "./newEpisodes";
 import { ExtraEpId, ExtraRig, buildExtraShots, buildExtraProps, updateExtraEpisode } from "./scenes/extraEpisodes";
+import { Batch2EpId, Batch2Rig, buildBatch2Shots, buildBatch2Props, updateBatch2Episode } from "./scenes/batch2Episodes";
 
 export type EpId =
   | "cavendish" | "magdeburg" | "faraday"
   | "galileo" | "archimedes" | "newton" | "franklin" | "tesla" | "rontgen"
-  | "pascal" | "doppler" | "curie";
+  | "pascal" | "doppler" | "curie"
+  | "foucault" | "hertz" | "bernoulli" | "hooke" | "homopolar" | "blackbody";
 export const EP_FRAMES: Record<EpId, number> = {
   cavendish: 2070, // 69.0 s @ 30 fps
   magdeburg: 1965, // 65.5 s @ 30 fps
@@ -41,12 +43,20 @@ export const EP_FRAMES: Record<EpId, number> = {
   pascal: 2100,
   doppler: 2100,
   curie: 2100,
+  foucault: 2100,
+  hertz: 2100,
+  bernoulli: 2100,
+  hooke: 2100,
+  homopolar: 2100,
+  blackbody: 2100,
 };
 
 const isNewEp = (ep: EpId): ep is NewEpId =>
   ep === "galileo" || ep === "archimedes" || ep === "newton" || ep === "franklin" || ep === "tesla" || ep === "rontgen";
 const isExtraEp = (ep: EpId): ep is ExtraEpId =>
   ep === "pascal" || ep === "doppler" || ep === "curie";
+const isBatch2Ep = (ep: EpId): ep is Batch2EpId =>
+  ep === "foucault" || ep === "hertz" || ep === "bernoulli" || ep === "hooke" || ep === "homopolar" || ep === "blackbody";
 
 // Plaza stage on the cobblestone riverfront promenade (clear sightlines, town + river backdrop)
 const SX = 18.0, SY = D0, SZ = -33.2;
@@ -135,6 +145,7 @@ class EpisodeRig {
   leafR = new THREE.Mesh();
   newRig: NewEpRig | null = null;
   extraRig: ExtraRig | null = null;
+  batch2Rig: Batch2Rig | null = null;
 
   constructor(public ep: EpId, root: THREE.Group) {
     this.group.position.set(SX, SY, SZ);
@@ -355,6 +366,18 @@ class EpisodeRig {
     }
     if (isExtraEp(ep)) {
       this.extraRig = buildExtraProps(ep, this.group, this.analogyGroup, {
+        wood: mWood,
+        stone: mStone,
+        iron: mIron,
+        copper: mCopper,
+        brass: mBrass,
+        glass: mGlass,
+        red: mRed,
+        paper: mPaper,
+      });
+    }
+    if (isBatch2Ep(ep)) {
+      this.batch2Rig = buildBatch2Props(ep, this.group, this.analogyGroup, {
         wood: mWood,
         stone: mStone,
         iron: mIron,
@@ -613,6 +636,9 @@ class EpisodeRig {
     if (isExtraEp(this.ep) && this.extraRig) {
       updateExtraEpisode(this.ep, f, shot, this.extraRig, [SX, SY, SZ], [PX, PY, PZ], places, fxList);
     }
+    if (isBatch2Ep(this.ep) && this.batch2Rig) {
+      updateBatch2Episode(this.ep, f, shot, this.batch2Rig, [SX, SY, SZ], [PX, PY, PZ], places, fxList);
+    }
 
     // Bind actors + contact shadow blobs into the shared Pool (high-res 480x800 character canvas so ink lines never break!)
     let ai = 0, fi = 0;
@@ -715,7 +741,9 @@ const makeEpisodeComp = (ep: EpId): React.FC => {
     ? buildNewShots(ep, [SX, SY, SZ], [PX, PY, PZ])
     : isExtraEp(ep)
       ? buildExtraShots(ep, [SX, SY, SZ], [PX, PY, PZ])
-      : makeShots(total, [SX, SY, SZ], [PX, PY, PZ]);
+      : isBatch2Ep(ep)
+        ? buildBatch2Shots(ep, [SX, SY, SZ], [PX, PY, PZ])
+        : makeShots(total, [SX, SY, SZ], [PX, PY, PZ]);
   const hookEnd = shots[0].b;
   const Comp: React.FC = () => {
     const f = useCurrentFrame();
@@ -748,3 +776,9 @@ export const RontgenShort = makeEpisodeComp("rontgen");
 export const PascalShort = makeEpisodeComp("pascal");
 export const DopplerShort = makeEpisodeComp("doppler");
 export const CurieShort = makeEpisodeComp("curie");
+export const FoucaultShort = makeEpisodeComp("foucault");
+export const HertzShort = makeEpisodeComp("hertz");
+export const BernoulliShort = makeEpisodeComp("bernoulli");
+export const HookeShort = makeEpisodeComp("hooke");
+export const HomopolarShort = makeEpisodeComp("homopolar");
+export const BlackbodyShort = makeEpisodeComp("blackbody");
