@@ -1,11 +1,10 @@
 """Voice + word timings for a cartoon short (pipeline step 3).
-Generates expressive speech with rich intonation, natural storytelling cadence,
-and per-episode vocal personality.
+Matched to punchy YouTube Shorts documentary narrator style (crisp cadence, warm low-mid,
+dynamic intonation, clear phrasing).
 usage: python make_voice.py <short_dir> [voice] [rate] [pitch]
 """
 import asyncio
 import json
-import re
 import subprocess
 import sys
 from pathlib import Path
@@ -13,15 +12,19 @@ from pathlib import Path
 import edge_tts
 import imageio_ffmpeg
 
-# Storyteller voices with high expression & distinct personality per topic:
-# - faraday (Victorian science drama): en-US-ChristopherNeural (warm, articulate, theatrical)
-# - bridge (Military history / suspense): en-US-AndrewMultilingualNeural (grounded, dramatic, engaging)
-# - default: en-US-BrianMultilingualNeural (clear, expressive story narrator)
+# Primary narrator: AndrewMultilingualNeural (+15% rate, -2Hz pitch) matches modern punchy
+# YouTube Shorts explainer style (crisp, confident, warm chest tone, natural emphasis).
 VOICE_MAP = {
     "faraday": "en-US-ChristopherNeural",
     "bridge": "en-US-AndrewMultilingualNeural",
     "cavendish": "en-US-ChristopherNeural",
     "magdeburg": "en-US-BrianMultilingualNeural",
+    "galileo": "en-US-AndrewMultilingualNeural",
+    "archimedes": "en-US-AndrewMultilingualNeural",
+    "newton": "en-US-AndrewMultilingualNeural",
+    "franklin": "en-US-AndrewMultilingualNeural",
+    "tesla": "en-US-AndrewMultilingualNeural",
+    "rontgen": "en-US-AndrewMultilingualNeural",
 }
 
 
@@ -37,9 +40,8 @@ def script_text(md: Path) -> str:
         for ln in md.read_text(encoding="utf-8").splitlines():
             if ln.strip() and not ln.startswith(("#", "Format:", "Facts:", "nobody killed")):
                 lines.append(ln.strip())
-    
-    # Clean text to give natural pauses:
-    # Ensure em-dashes and ellipses have breathing room for natural voice inflections
+
+    # Preserve crisp micro-pauses on em-dashes and ellipses for punchy documentary cadence
     full = " ".join(lines)
     full = full.replace("—", ", ")
     full = full.replace("...", "... ")
@@ -50,14 +52,10 @@ async def main(d: Path, voice: str | None = None, rate: str | None = None, pitch
     out = d / "voice"
     out.mkdir(parents=True, exist_ok=True)
     slug = d.name.lower()
-    
-    # 1. Pick natural storytelling voice & cadence
-    sel_voice = voice or VOICE_MAP.get(slug, "en-US-ChristopherNeural")
-    
-    # More relaxed, natural speech rate (was +25% which sounded rushed and robotic)
-    # +10% to +12% gives perfect punchy YouTube Shorts energy without losing human cadence
-    sel_rate = rate or ("+10%" if slug in ("bridge", "faraday") else "+12%")
-    sel_pitch = pitch or "+0Hz"
+
+    sel_voice = voice or VOICE_MAP.get(slug, "en-US-AndrewMultilingualNeural")
+    sel_rate = rate or "+15%"
+    sel_pitch = pitch or "-2Hz"
 
     text = script_text(d / "SCRIPT.md")
     print(f"[{slug}] Synthesizing with voice='{sel_voice}', rate='{sel_rate}', pitch='{sel_pitch}'...")
@@ -71,21 +69,26 @@ async def main(d: Path, voice: str | None = None, rate: str | None = None, pitch
             s = round(ch["offset"] / 1e7, 3)
             e = round((ch["offset"] + ch["duration"]) / 1e7, 3)
             words.append({"w": ch["text"], "s": s, "e": e, "word": ch["text"], "start": s, "end": e})
-            
+
     mp3_path = out / "voice.mp3"
     wav_path = out / "voice.wav"
     mp3_path.write_bytes(audio)
-    
-    # Convert to 48kHz mono WAV with broadcast quality high-shelf & speech clarity EQ
+
+    # Broadcast documentary chain: rumble cut (80Hz) + warm chest (+1.5dB @ 180Hz) +
+    # crisp vocal clarity (+2.5dB @ 3.5kHz) + gentle leveling compressor
     ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
-    # Apply warm vocal presence filter: highpass 80Hz + gentle warm presence boost at 3kHz
-    vf = "highpass=f=80,equalizer=f=3000:t=q:w=1.2:g=2.0"
+    vf = (
+        "highpass=f=80,"
+        "equalizer=f=180:t=q:w=1.0:g=1.5,"
+        "equalizer=f=3500:t=q:w=1.2:g=2.5,"
+        "acompressor=threshold=-18dB:ratio=2.5:attack=10:release=120:makeup=2"
+    )
     subprocess.run([
         ffmpeg_exe, "-y", "-loglevel", "error", "-i", str(mp3_path),
         "-af", vf,
         "-ar", "48000", "-ac", "1", str(wav_path)
     ], check=True)
-    
+
     (out / "words.json").write_text(json.dumps(words, indent=1), encoding="utf-8")
     dur = words[-1]["e"] if words else 0
     print(f"[{slug}] Done: {len(words)} words, {dur:.2f} s ({len(words) / max(dur, 1e-6):.2f} words/s)")
