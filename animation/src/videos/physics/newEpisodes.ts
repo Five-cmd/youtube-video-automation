@@ -1093,20 +1093,37 @@ export function updateNewEpisode(
     });
 
     if (shot.id <= 3 || shot.id === 10) {
-      for (let i = 0; i < 2; i++) {
+      const scurry = ((f - shot.a) / 90);
+      for (let i = 0; i < 3; i++) {
+        const xRun = shot.id === 10
+          ? SX + 0.6 + i * 0.55 + clamp01(scurry) * 2.4
+          : SX + 2.6 - clamp01(scurry) * (1.8 + i * 0.3) + i * 0.55;
         places.push({
           key: `newAud|${i}|${pose}`,
-          draw: (p) => bodySide(p, townsfolk(i + 2), { mode: "march", expr: "nervous", phase: (t * 2.2 + i * 0.3) % 1 }),
-          x: SX + 1.55 + i * 0.65,
-          y: SY,
-          z: SZ + 0.8,
+          draw: (p) => bodySide(p, townsfolk(i + 2), { mode: "march", expr: shot.id === 10 ? "shock" : "nervous", phase: (t * 2.6 + i * 0.3) % 1 }),
+          x: xRun,
+          y: SY + (shot.id === 10 && f % 6 < 3 ? 0.08 : 0),
+          z: SZ + 0.8 + (i % 2) * 0.25,
+          mirror: shot.id <= 3,
         });
       }
     }
 
-    // Park overhead spinning rope & copper water bucket
+    // Park overhead spinning rope & copper water bucket + orbiting splash droplets
     rig.bucketPivot.rotation.z = t * 5.2;
     if (shot.id >= 11 && shot.id <= 13) {
+      const ang = t * 5.2;
+      fxList.push({
+        key: `nwDrop|${f % 3}`,
+        cw: 180,
+        ch: 180,
+        draw: (p) => fxStars(p, (f % 10) / 10),
+        x: PX - Math.sin(ang) * 1.15,
+        y: PY + 1.45 + Math.cos(ang) * 1.15,
+        z: PZ + 0.05,
+        w: 0.7,
+        h: 0.7,
+      });
       places.push({
         key: `nwKid|${pose}`,
         draw: (p) => bodyFront(p, KID, { mode: "stand", expr: "grin", wave: 0.7 }),
@@ -1117,7 +1134,7 @@ export function updateNewEpisode(
       });
       places.push({
         key: `nwPar|${pose}`,
-        draw: (p) => bodyFront(p, PARENT, { mode: "stand", expr: "smile" }),
+        draw: (p) => bodyFront(p, PARENT, { mode: "stand", expr: "smile", wave: 0.35 }),
         x: PX - 1.25,
         y: PY,
         z: PZ + 0.2,
@@ -1169,33 +1186,60 @@ export function updateNewEpisode(
     }
 
     const fkExpr: Expr = shot.id === 8 ? "shock" : shot.id >= 9 ? "grin" : "smile";
+    const fkWalkIn = shot.id === 1 ? clamp01((f - shot.a) / 70) : 1;
     places.push({
-      key: `fk|${fkExpr}|${pose}|${blink(1) ? 1 : 0}`,
-      draw: (p) => bodyFront(p, FRANKLIN_OUTFIT, { mode: "stand", expr: fkExpr, blink: blink(1), wave: shot.id === 8 ? 0.8 : 0.45 }),
-      x: SX + 0.35,
+      key: `fk|${shot.id === 1 && fkWalkIn < 0.95 ? "w" : "s"}|${fkExpr}|${pose}|${blink(1) ? 1 : 0}`,
+      draw: (p) =>
+        shot.id === 1 && fkWalkIn < 0.95
+          ? bodySide(p, FRANKLIN_OUTFIT, { mode: "march", phase: (t * 2.4) % 1, expr: "grin", blink: blink(1) })
+          : bodyFront(p, FRANKLIN_OUTFIT, { mode: "stand", expr: fkExpr, blink: blink(1), wave: shot.id === 8 ? 0.8 : 0.45 }),
+      x: SX + 2.2 - fkWalkIn * 1.85,
       y: SY,
       z: SZ + 0.15,
+      mirror: shot.id === 1 && fkWalkIn < 0.95,
     });
     if (shot.id === 5 || shot.id === 10) {
+      const kidIn = shot.id === 5 ? clamp01((f - shot.a) / 50) : 1;
       places.push({
         key: `fkOther|${shot.id}|${pose}`,
-        draw: (p) => bodyFront(p, shot.id === 5 ? KID : townsfolk(1), { mode: "stand", expr: shot.id === 10 ? "dazed" : "nervous" }),
-        x: SX + 0.95,
+        draw: (p) =>
+          shot.id === 5 && kidIn < 0.95
+            ? bodySide(p, KID, { mode: "march", phase: (t * 2.8) % 1, expr: "nervous" })
+            : bodyFront(p, shot.id === 5 ? KID : townsfolk(1), { mode: "stand", expr: shot.id === 10 ? "dazed" : "nervous" }),
+        x: SX + 0.95 + (1 - kidIn) * 1.8,
         y: SY,
         z: SZ + 0.45,
         scale: shot.id === 5 ? 0.84 : 1,
+        mirror: shot.id === 5 && kidIn < 0.95,
       });
     }
-    if (shot.id === 1) {
-      for (let i = 0; i < 2; i++) {
+    if (shot.id === 1 || shot.id >= 14) {
+      const fleeU = clamp01((f - shot.a) / 85);
+      for (let i = 0; i < 3; i++) {
         places.push({
-          key: `fkRun|${i}|${pose}`,
-          draw: (p) => bodySide(p, townsfolk(i), { mode: "march", expr: "shock", phase: (t * 2.5) % 1 }),
-          x: SX + 1.35 + i * 0.65,
+          key: `fkRun|${shot.id}|${i}|${pose}`,
+          draw: (p) =>
+            shot.id === 1
+              ? bodySide(p, townsfolk(i), { mode: "march", expr: "shock", phase: (t * 3.1 + i * 0.25) % 1 })
+              : bodyFront(p, townsfolk(i), { mode: "stand", expr: "grin", wave: 0.6 }),
+          x: shot.id === 1 ? SX + 0.2 + i * 0.45 + fleeU * 3.1 : SX + 1.15 + i * 0.55,
           y: SY,
-          z: SZ + 0.6,
+          z: SZ + 0.6 + (i % 2) * 0.2,
         });
       }
+    }
+    if (shot.id >= 13 && shot.id <= 15 && f % 6 < 3) {
+      fxList.push({
+        key: `rodGround|${f % 3}`,
+        cw: 200,
+        ch: 200,
+        draw: (p) => fxStars(p, (f % 10) / 10),
+        x: SX + 0.65,
+        y: SY + 0.35,
+        z: SZ - 0.35,
+        w: 0.9,
+        h: 0.9,
+      });
     }
 
     // Park rug sock shuffle + brass doorknob static zap!
@@ -1263,14 +1307,60 @@ export function updateNewEpisode(
       z: SZ + 0.35,
     });
     if (shot.id === 3 || shot.id === 4 || shot.id === 7 || shot.id === 8) {
-      const leave = shot.id === 8 ? clamp01((f - shot.a) / 55) * 1.5 : 0;
+      const leave = shot.id === 8 ? clamp01((f - shot.a) / 55) * 1.9 : 0;
+      const walkOff = shot.id === 8 && leave > 0.05;
       places.push({
-        key: `morgan|${shot.id}|${pose}`,
-        draw: (p) => bodyFront(p, MORGAN_OUTFIT, { mode: shot.id === 8 ? "stroll" : "stand", expr: shot.id >= 7 ? "stern" : "grin", phase: (t * 2) % 1 }),
+        key: `morgan|${shot.id}|${walkOff ? "w" : "s"}|${pose}`,
+        draw: (p) =>
+          walkOff
+            ? bodySide(p, MORGAN_OUTFIT, { mode: "march", expr: "stern", phase: (t * 2.6) % 1 })
+            : bodyFront(p, MORGAN_OUTFIT, { mode: "stand", expr: shot.id >= 7 ? "stern" : "grin", phase: (t * 2) % 1 }),
         x: SX + 0.95 + leave,
         y: SY,
         z: SZ + 0.45,
       });
+    }
+    if (shot.id === 5 || shot.id === 6) {
+      const crowdIn = shot.id === 5 ? clamp01((f - shot.a) / 60) : 1;
+      for (let i = 0; i < 2; i++) {
+        const arrived = crowdIn >= 0.95;
+        places.push({
+          key: `tsLocal|${i}|${arrived ? "s" : "w"}|${pose}`,
+          draw: (p) =>
+            arrived
+              ? bodyFront(p, townsfolk(i), { mode: "stand", expr: "grin", wave: 0.72 })
+              : bodySide(p, townsfolk(i), { mode: "march", expr: "shock", phase: (t * 2.7 + i * 0.3) % 1 }),
+          x: SX + 0.75 + i * 0.55 + (1 - crowdIn) * 2.0,
+          y: SY,
+          z: SZ + 0.55 + i * 0.15,
+          mirror: !arrived,
+        });
+      }
+    }
+    if (shot.id === 10) {
+      const fleeU = clamp01((f - shot.a) / 65);
+      for (let i = 0; i < 2; i++) {
+        places.push({
+          key: `tsCrew|${i}|${pose}`,
+          draw: (p) => bodySide(p, townsfolk(i + 2), { mode: "march", expr: "shock", phase: (t * 3.1 + i * 0.25) % 1 }),
+          x: SX + 0.45 + i * 0.4 + fleeU * 2.6,
+          y: SY,
+          z: SZ + 0.55 + i * 0.2,
+        });
+      }
+      if (f % 10 < 5) {
+        fxList.push({
+          key: `tsDust|${f % 3}`,
+          cw: 180,
+          ch: 180,
+          draw: (p) => fxBurst(p, 0.35),
+          x: SX - 0.55,
+          y: SY + 0.35,
+          z: SZ - 0.4,
+          w: 1.4,
+          h: 1.0,
+        });
+      }
     }
 
     // Park Tuning Forks resonance rings + Wireless phone charger (S11-S12, S14)
@@ -1336,31 +1426,58 @@ export function updateNewEpisode(
   });
 
   if (shot.id === 7 || shot.id === 8) {
+    const bWalk = shot.id === 7 ? clamp01((f - shot.a) / 50) : 1;
+    const arrived = bWalk >= 0.95;
     places.push({
-      key: `bertha|${shot.id}|${pose}`,
-      draw: (p) => bodyFront(p, BERTHA_OUTFIT, { mode: "stand", expr: shot.id === 8 ? "shock" : "nervous", wave: 0.65 }),
-      x: SX + 0.45,
+      key: `bertha|${shot.id}|${arrived ? "s" : "w"}|${pose}`,
+      draw: (p) =>
+        arrived
+          ? bodyFront(p, BERTHA_OUTFIT, { mode: "stand", expr: shot.id === 8 ? "shock" : "nervous", wave: 0.65 })
+          : bodySide(p, BERTHA_OUTFIT, { mode: "march", expr: "nervous", phase: (t * 2.4) % 1 }),
+      x: SX + 0.45 + (1 - bWalk) * 1.9,
       y: SY,
       z: SZ + 0.25,
+      mirror: !arrived,
     });
   }
   if (shot.id === 9 || shot.id === 14) {
+    const docIn = shot.id === 9 ? clamp01((f - shot.a) / 48) : 1;
+    const arrived = docIn >= 0.95;
     places.push({
-      key: `rgDoc|${pose}`,
-      draw: (p) => bodyFront(p, DOC_OUTFIT, { mode: "stand", expr: "grin", wave: 0.55 }),
-      x: SX + 1.1,
+      key: `rgDoc|${shot.id}|${arrived ? "s" : "w"}|${pose}`,
+      draw: (p) =>
+        arrived
+          ? bodyFront(p, DOC_OUTFIT, { mode: "stand", expr: "grin", wave: 0.55 })
+          : bodySide(p, DOC_OUTFIT, { mode: "march", expr: "grin", phase: (t * 2.5) % 1 }),
+      x: SX + 1.1 + (1 - docIn) * 1.7,
       y: SY,
       z: SZ + 0.35,
+      mirror: !arrived,
     });
+    if (shot.id === 14) {
+      places.push({
+        key: `rgPatient|${pose}`,
+        draw: (p) => bodyFront(p, townsfolk(1), { mode: "stand", expr: "smile", wave: 0.4 }),
+        x: SX + 1.75,
+        y: SY,
+        z: SZ + 0.5,
+      });
+    }
   }
   if (shot.id === 10) {
+    const stepU = clamp01((f - shot.a) / 40);
+    const onBox = stepU >= 0.92;
     places.push({
-      key: `shoeKid|${pose}`,
-      draw: (p) => bodyFront(p, KID, { mode: "stand", expr: "shock" }),
-      x: SX + 0.95,
-      y: SY + 0.2,
+      key: `shoeKid|${onBox ? "s" : "w"}|${pose}`,
+      draw: (p) =>
+        onBox
+          ? bodyFront(p, KID, { mode: "stand", expr: "shock" })
+          : bodySide(p, KID, { mode: "march", expr: "grin", phase: (t * 2.8) % 1 }),
+      x: SX + 0.95 + (1 - stepU) * 1.5,
+      y: SY + (onBox ? 0.2 : 0.04 * Math.sin(stepU * Math.PI)),
       z: SZ + 0.4,
       scale: 0.84,
+      mirror: !onBox,
     });
   }
 
@@ -1371,6 +1488,19 @@ export function updateNewEpisode(
     const zPos = bounces ? (u < 0.5 ? -1.4 + u * 2.6 : -0.1 - (u - 0.5) * 2.4) : -1.4 + u * 2.8;
     const xPos = bounces ? (i === 0 ? -0.95 : i === 2 ? 0 : 0.95) : (i - 2.5) * 0.35;
     m.position.set(xPos, 0.75 + (i % 3) * 0.22, zPos);
+    if ((shot.id === 11 || shot.id === 12) && bounces && u > 0.44 && u < 0.58) {
+      fxList.push({
+        key: `rgHit|${i}|${f % 3}`,
+        cw: 150,
+        ch: 150,
+        draw: (p) => fxBurst(p, 0.3),
+        x: PX + xPos,
+        y: PY + 0.75 + (i % 3) * 0.22,
+        z: PZ - 0.1,
+        w: 0.65,
+        h: 0.65,
+      });
+    }
   });
   if (shot.id === 11 || shot.id === 12) {
     places.push({
