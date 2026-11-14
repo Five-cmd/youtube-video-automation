@@ -497,6 +497,139 @@ def build_faraday_sfx(dur: float, v_ref: float) -> np.ndarray:
     return hp(out, 25, 2)
 
 
+# Distinct episode configurations for the 6 new physics shorts (each with unique key, BPM, instruments, and physical SFX)
+NEW_EPISODE_THEMES = {
+    "GalileoShort": {
+        "seed": 101, "bpm": 112.0, "root": 60, "mode": "renaissance",
+        "prog": [(60, 64, 67), (57, 60, 64), (65, 69, 72), (67, 71, 74)],
+        "lead": [72, 74, 76, 79, 76, 74, 72, 71, 69, 72, 74, 76, 74, 72, 71, 67],
+        "inst": "flute_lute", "sfx": "cannonball",
+    },
+    "ArchimedesShort": {
+        "seed": 202, "bpm": 126.0, "root": 62, "mode": "mediterranean",
+        "prog": [(62, 65, 69), (60, 64, 67), (58, 62, 65), (60, 64, 67)],
+        "lead": [74, 77, 76, 74, 72, 74, 77, 79, 77, 76, 74, 72, 70, 72, 74, 69],
+        "inst": "lyre_perc", "sfx": "splash",
+    },
+    "NewtonShort": {
+        "seed": 303, "bpm": 98.0, "root": 65, "mode": "pastoral",
+        "prog": [(65, 69, 72), (62, 65, 69), (58, 62, 65), (60, 64, 67)],
+        "lead": [77, 76, 74, 72, 74, 77, 79, 81, 79, 77, 74, 72, 70, 72, 74, 72],
+        "inst": "cello_harp", "sfx": "apple",
+    },
+    "FranklinShort": {
+        "seed": 404, "bpm": 120.0, "root": 64, "mode": "storm",
+        "prog": [(64, 67, 71), (60, 64, 67), (62, 66, 69), (59, 62, 66)],
+        "lead": [76, 79, 78, 76, 74, 76, 79, 83, 81, 79, 78, 76, 74, 71, 74, 76],
+        "inst": "storm_brass", "sfx": "thunder",
+    },
+    "TeslaShort": {
+        "seed": 505, "bpm": 132.0, "root": 59, "mode": "electric",
+        "prog": [(59, 62, 66), (55, 59, 62), (57, 61, 64), (54, 57, 61)],
+        "lead": [71, 74, 78, 83, 81, 78, 74, 71, 74, 78, 81, 86, 83, 81, 78, 74],
+        "inst": "synth_arp", "sfx": "coil",
+    },
+    "RontgenShort": {
+        "seed": 606, "bpm": 102.0, "root": 55, "mode": "xray",
+        "prog": [(55, 58, 62), (51, 55, 58), (53, 57, 60), (50, 54, 57)],
+        "lead": [79, 78, 79, 82, 81, 79, 77, 74, 79, 81, 82, 86, 84, 82, 81, 79],
+        "inst": "glass_pad", "sfx": "xray_tube",
+    },
+}
+
+
+def build_thematic_music(dur: float, cfg: dict) -> np.ndarray:
+    b = EpBand(ns(dur))
+    r = rng(cfg["seed"])
+    beat = 60.0 / cfg["bpm"]
+    n_beats = int(dur / beat)
+    prog = cfg["prog"]
+    lead = cfg["lead"]
+    inst = cfg["inst"]
+
+    for bi in range(n_beats):
+        t = bi * beat
+        bar = (bi // 4) % 4
+        ch = prog[bar]
+        note_m = lead[bi % len(lead)]
+
+        # Bass pulse on downbeats
+        if bi % 2 == 0:
+            b.add("bass", I.tuba(F(ch[0] - 24), 0.72, r(), dur=beat * 1.6), t, p=-0.1, g=0.8)
+
+        # Warm harmonic pad per bar
+        if bi % 4 == 0:
+            for c_idx, n_m in enumerate(ch):
+                b.add("pad", I.strings_pad(F(n_m), 0.35, r(), dur=beat * 3.8), t, p=(c_idx - 1) * 0.25, g=0.45)
+
+        # Distinct lead + counter texture per episode genre
+        if inst == "flute_lute":
+            b.add("lead", I.glock(F(note_m), 0.65, r(), dur=beat * 0.8), t, p=0.15, g=0.7)
+            b.add("pluck", I.pizz(F(ch[bi % 3]), 0.6, r()), t + beat * 0.5, p=-0.35, g=0.55)
+        elif inst == "lyre_perc":
+            b.add("pluck", I.harpsi(F(note_m), 0.8, r(), dur=beat * 0.55), t, p=0.2, g=0.75)
+            b.add("perc", I.snare(0.55, r()), t, p=-0.25, g=0.45 if bi % 2 == 0 else 0.22)
+        elif inst == "cello_harp":
+            b.add("lead", I.strings_pad(F(note_m - 12), 0.75, r(), dur=beat * 1.1), t, p=0.0, g=0.65)
+            b.add("pluck", I.pizz(F(ch[(bi + 1) % 3] + 12), 0.55, r()), t + beat * 0.5, p=0.35, g=0.5)
+        elif inst == "storm_brass":
+            if bi % 2 == 0:
+                b.add("brass", I.horn(F(note_m - 12), 0.75, r(), dur=beat * 1.3), t, p=-0.2, g=0.7)
+            b.add("perc", I.timpani(F(ch[0] - 24), 0.7, r()), t, p=0.15, g=0.55 if bi % 4 == 0 else 0.25)
+        elif inst == "synth_arp":
+            b.add("spark", I.vibra(F(note_m), 0.72, r(), dur=beat * 0.45), t, p=0.3 * math.sin(bi), g=0.75)
+            b.add("pluck", I.harpsi(F(ch[bi % 3] + 12), 0.5, r(), dur=beat * 0.35), t + beat * 0.5, p=-0.3, g=0.6)
+        else:  # glass_pad
+            b.add("bell", I.vibra(F(note_m), 0.65, r(), dur=beat * 1.4), t, p=0.25, g=0.65)
+            b.add("spark", I.glock(F(ch[bi % 3] + 24), 0.35, r(), dur=beat * 0.7), t + beat * 0.5, p=-0.25, g=0.45)
+
+    return render_band(b, ref=-20.0)
+
+
+def build_thematic_sfx(dur: float, v_ref: float, sfx_kind: str) -> np.ndarray:
+    N = ns(dur)
+    out = np.zeros((2, N))
+    r = rng(777)
+    rr = lambda: rng(int(r.integers(1, 2**31 - 1)))
+
+    def add_ev(t: float, x: np.ndarray, rel: float = -6.0, p: float = 0.0):
+        st_x = pan(x, p) if np.ndim(x) == 1 else x
+        L = integrated(st_x)
+        if np.isfinite(L):
+            st_x = st_x * dbg((v_ref + rel) - L)
+        place(out, st_x, t)
+
+    # Subtle ambient bed
+    bed = lp(colored(dur, rr(), -1.5), 400.0) * 0.05
+    place(out, fades(st(bed), 0.4, 0.5), 0.0)
+
+    if sfx_kind == "cannonball":
+        add_ev(4.3, G.thump(rr(), 1.0, 58.0), -3.5, 0.0)  # Hook flash
+        add_ev(33.2, G.thump(rr(), 1.2, 48.0), -1.5, -0.15)  # Heavy ball boom
+        add_ev(33.22, G.thump(rr(), 0.9, 68.0), -2.0, 0.15)  # Light ball simultaneous boom
+    elif sfx_kind == "splash":
+        add_ev(4.3, G.water_splash(rr(), 0.7), -4.5, 0.0)
+        add_ev(22.5, G.water_splash(rr(), 1.1), -2.5, 0.0)   # Tub overflow
+        add_ev(33.2, G.water_splash(rr(), 1.0), -2.5, 0.1)   # Crown dunk
+    elif sfx_kind == "apple":
+        add_ev(4.3, G.thump(rr(), 0.8, 95.0), -4.5, 0.0)
+        add_ev(14.5, G.thump(rr(), 1.0, 110.0), -3.0, 0.1)   # Apple bonk
+        add_ev(33.2, G.whip(rr(), 1.0), -3.0, 0.0)           # Orbit cannon whoosh
+    elif sfx_kind == "thunder":
+        add_ev(4.3, G.thump(rr(), 1.1, 45.0), -3.0, 0.0)
+        add_ev(33.2, I.glock(F(96), 0.7, rr(), dur=0.3), -3.0, -0.2)
+        add_ev(33.25, G.thump(rr(), 1.3, 42.0), -1.5, 0.0)   # Lightning snap + thunder
+    elif sfx_kind == "coil":
+        add_ev(4.3, I.vibra(F(88), 0.6, rr(), dur=0.4), -4.0, 0.0)
+        add_ev(33.2, G.thump(rr(), 1.1, 52.0), -2.5, 0.0)
+        add_ev(33.3, I.glock(F(98), 0.8, rr(), dur=0.5), -3.5, 0.2)
+    else:  # xray_tube
+        add_ev(4.3, I.glock(F(91), 0.5, rr(), dur=0.6), -5.0, 0.0)
+        add_ev(33.2, I.vibra(F(86), 0.7, rr(), dur=0.9), -3.0, 0.0)  # Mysterious X-ray glow chime
+
+    return hp(out, 25, 2)
+
+
 def render_episode_score_and_sfx(comp: str, dur: float, v_ref: float) -> tuple[np.ndarray, np.ndarray]:
     if comp == "CavendishShort":
         return build_cavendish_music(dur), build_cavendish_sfx(dur, v_ref)
@@ -504,6 +637,9 @@ def render_episode_score_and_sfx(comp: str, dur: float, v_ref: float) -> tuple[n
         return build_magdeburg_music(dur), build_magdeburg_sfx(dur, v_ref)
     if comp == "FaradayShort":
         return build_faraday_music(dur), build_faraday_sfx(dur, v_ref)
+    if comp in NEW_EPISODE_THEMES:
+        cfg = NEW_EPISODE_THEMES[comp]
+        return build_thematic_music(dur, cfg), build_thematic_sfx(dur, v_ref, cfg["sfx"])
     # Default BridgeShort uses the original military march & bridge collapse SFX
     import music
     import sfx
