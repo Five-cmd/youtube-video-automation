@@ -22,12 +22,12 @@ COMP_MAP = {
     "CavendishShort": ("cavendish", 2070 / 30.0),
     "MagdeburgShort": ("magdeburg", 1965 / 30.0),
     "FaradayShort": ("faraday", 2010 / 30.0),
-    "GalileoShort": ("galileo", 1980 / 30.0),
-    "ArchimedesShort": ("archimedes", 1980 / 30.0),
-    "NewtonShort": ("newton", 2010 / 30.0),
-    "FranklinShort": ("franklin", 1980 / 30.0),
-    "TeslaShort": ("tesla", 1980 / 30.0),
-    "RontgenShort": ("rontgen", 1980 / 30.0),
+    "GalileoShort": ("galileo", 2100 / 30.0),
+    "ArchimedesShort": ("archimedes", 2100 / 30.0),
+    "NewtonShort": ("newton", 2100 / 30.0),
+    "FranklinShort": ("franklin", 2100 / 30.0),
+    "TeslaShort": ("tesla", 2100 / 30.0),
+    "RontgenShort": ("rontgen", 2100 / 30.0),
 }
 
 
@@ -63,15 +63,45 @@ def build_audio(comp: str) -> Path:
         (vdir / "words.json").write_bytes(words_json.read_bytes())
 
     target_n = ns(dur)
+    lead_s = 0.30
+    usable_s = dur - 1.20
     x, sr = read_wav(str(voice_wav))
     assert sr == SR, f"Expected {SR} Hz, got {sr}"
     v_mono = x[0] if x.shape[0] == 1 else x.mean(0)
+    words = json.loads(words_json.read_text(encoding="utf-8"))
+
+    # Never silently truncate speech: time-fit via transparent FFmpeg atempo if narration exceeds usable_s
+    speech_end = words[-1]["e"] if words else len(v_mono) / SR
+    if speech_end > usable_s and slug in ("galileo", "archimedes", "newton", "franklin", "tesla", "rontgen"):
+        import imageio_ffmpeg
+        speed = min(1.35, max(1.0, speech_end / (usable_s - lead_s)))
+        fitted_wav = short_dir / "voice" / "voice_fit.wav"
+        subprocess.run([
+            imageio_ffmpeg.get_ffmpeg_exe(), "-y", "-loglevel", "error",
+            "-i", str(voice_wav), "-af", f"atempo={speed:.5f}",
+            "-ar", str(SR), "-ac", "1", str(fitted_wav),
+        ], check=True)
+        fx, _ = read_wav(str(fitted_wav))
+        v_mono = fx[0] if fx.shape[0] == 1 else fx.mean(0)
+        for w in words:
+            w["s"] = round(lead_s + w["s"] / speed, 3)
+            w["e"] = round(lead_s + w["e"] / speed, 3)
+        print(f"[{slug}] Time-fitted voice {speech_end:.2f}s -> {len(v_mono)/SR:.2f}s (atempo={speed:.3f}x)")
+        lead_n = ns(lead_s)
+    elif slug in ("galileo", "archimedes", "newton", "franklin", "tesla", "rontgen"):
+        for w in words:
+            w["s"] = round(lead_s + w["s"], 3)
+            w["e"] = round(lead_s + w["e"], 3)
+        lead_n = ns(lead_s)
+    else:
+        lead_n = 0
+
     v = np.zeros(target_n, dtype=np.float64)
-    v[: min(target_n, len(v_mono))] = v_mono[:target_n]
+    take = min(target_n - lead_n, len(v_mono))
+    v[lead_n : lead_n + take] = v_mono[:take]
     v = st(v)
     v_ref = integrated(v)
 
-    words = json.loads(words_json.read_text(encoding="utf-8"))
     spans = M.speech_spans(words)
 
     # Synthesize episode-specific original score + SFX (cached per CompId in _cache/)
